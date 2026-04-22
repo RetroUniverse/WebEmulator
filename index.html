@@ -1,0 +1,5363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RetroUniverse — Multi-system browser emulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=VT323&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0612;
+      --surface: #120a1f;
+      --surface-raised: #1a1126;
+      --border: #2a1f3d;
+      --text: #c9bde0;
+      --text-bright: #f2e9ff;
+      --muted: #8a7ba8;
+      --accent: #ff2e97;
+      --accent-dim: #c7226f;
+      --red: #ff5c7a;
+      --blue: #4fe3ff;
+      --cyan: #4fe3ff;
+      --danger: #ff5c7a;
+      --amber: #ffb627;
+      --green: #7dff7a;
+    }
+
+    [data-theme="midnight"] {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-raised: #1c2129;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --muted: #8b949e;
+      --accent: #7c6cf0;
+      --accent-dim: #6354c8;
+      --red: #f85149;
+      --blue: #58a6ff;
+      --cyan: #3fb9b0;
+      --danger: #da3633;
+    }
+
+    [data-theme="crt"] {
+      --bg: #050a05;
+      --surface: #0a140a;
+      --surface-raised: #0f1e0f;
+      --border: #1a3a1a;
+      --text: #33cc33;
+      --text-bright: #66ff66;
+      --muted: #228822;
+      --accent: #00ff41;
+      --accent-dim: #00cc33;
+      --red: #ff3333;
+      --blue: #33cc33;
+      --cyan: #00ff41;
+      --danger: #cc2222;
+    }
+
+    [data-theme="sakura"] {
+      --bg: #1a1218;
+      --surface: #221a20;
+      --surface-raised: #2a2028;
+      --border: #3d2e38;
+      --text: #e0c8d8;
+      --text-bright: #f5e0ef;
+      --muted: #9a7d90;
+      --accent: #e8779a;
+      --accent-dim: #c05a80;
+      --red: #e05070;
+      --blue: #8899cc;
+      --cyan: #77aaa0;
+      --danger: #c04060;
+      --is-pro: true;
+    }
+
+    [data-theme="neon"] {
+      --bg: #0a0a14;
+      --surface: #12121f;
+      --surface-raised: #1a1a2e;
+      --border: #2a2a4a;
+      --text: #d0d0e8;
+      --text-bright: #f0f0ff;
+      --muted: #7070a0;
+      --accent: #ff2d95;
+      --accent-dim: #cc2477;
+      --red: #ff3366;
+      --blue: #00d4ff;
+      --cyan: #00ffcc;
+      --danger: #ff1a4a;
+      --is-pro: true;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --surface-raised: #e8e8e8;
+      --border: #d0d0d0;
+      --text: #333333;
+      --text-bright: #111111;
+      --muted: #888888;
+      --accent: #d06030;
+      --accent-dim: #b85028;
+      --red: #cc3333;
+      --blue: #4477bb;
+      --cyan: #338877;
+      --danger: #b33;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      color: var(--text);
+      font-family: "Space Grotesk", -apple-system, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      background: var(--bg);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    a:hover {
+      color: var(--text-bright);
+    }
+
+    /* ── header ─────────────────────────────── */
+    header {
+      padding: 0.8rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-left h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      letter-spacing: -0.02em;
+    }
+
+    .header-left p {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 0.1rem;
+    }
+
+    @media (max-width: 600px) {
+      .header-left p {
+        display: none;
+      }
+    }
+
+    /* ── auth header buttons ────────────────── */
+    .auth-area {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .btn-auth {
+      padding: 0.4rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .btn-auth:hover {
+      border-color: #555;
+      background: var(--surface-raised);
+    }
+
+    .btn-auth.accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-auth.accent:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent-dim);
+    }
+
+    /* ── avatar button + dropdown ───────────── */
+    .avatar-wrap {
+      position: relative;
+    }
+
+    .avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--surface-raised);
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 0;
+      transition: border-color 0.15s;
+    }
+
+    .avatar-btn:hover {
+      border-color: var(--accent-dim);
+    }
+
+    .avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.35rem 0;
+      z-index: 100;
+      display: none;
+    }
+
+    .dropdown.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      padding: 0.5rem 0.9rem;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover {
+      background: var(--surface-raised);
+    }
+
+    .dropdown-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 0.3rem 0;
+    }
+
+    .dropdown-item.danger {
+      color: var(--danger);
+    }
+
+    /* ── modals ─────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .modal h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 1rem;
+    }
+
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .form-group {
+      margin-bottom: 0.85rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-dim);
+    }
+
+    .form-error {
+      color: var(--danger);
+      font-size: 0.78rem;
+      margin-top: 0.3rem;
+      min-height: 1.1rem;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .form-actions button {
+      flex: 1;
+    }
+
+    .form-switch {
+      text-align: center;
+      margin-top: 0.9rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .form-switch a {
+      cursor: pointer;
+    }
+
+    /* ── profile modal ─────────────────────── */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--surface-raised);
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-avatar:hover::after {
+      content: "Edit";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #fff;
+      border-radius: 50%;
+    }
+
+    .profile-info h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .profile-info p {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .profile-section {
+      margin-top: 1.2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .profile-section h4 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .history-list li {
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text);
+    }
+
+    .history-list li:last-child {
+      border-bottom: none;
+    }
+
+    .history-list .h-date {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .history-empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .profile-btn-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .btn-small {
+      padding: 0.35rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-small:hover {
+      border-color: #555;
+      background: var(--surface-raised);
+    }
+
+    .btn-small.danger {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-small.danger:hover {
+      background: rgba(187, 51, 51, 0.15);
+    }
+
+    .save-notice {
+      margin-top: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      background: rgba(224, 120, 64, 0.1);
+      border: 1px solid rgba(224, 120, 64, 0.2);
+      font-size: 0.78rem;
+      color: var(--accent);
+    }
+
+    /* ── layout ─────────────────────────────── */
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 4.5rem);
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── sidebar ────────────────────────────── */
+    .sidebar {
+      padding: 1rem 1.2rem 1.5rem;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    @media (max-width: 860px) {
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 1.2rem 0 0.4rem;
+      color: var(--muted);
+    }
+
+    .section-title:first-child {
+      margin-top: 0;
+    }
+
+    .section-title.style-nintendo {
+      color: var(--red);
+    }
+
+    .section-title.style-sony {
+      color: var(--blue);
+    }
+
+    .section-title.style-sega {
+      color: var(--cyan);
+    }
+
+    .systems {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sys-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    .sys-btn:hover {
+      background: var(--surface);
+      border-color: var(--border);
+    }
+
+    .sys-btn.active {
+      background: var(--surface-raised);
+      border-color: var(--accent-dim);
+      color: var(--text-bright);
+    }
+
+    .sys-btn .tag {
+      font-size: 0.6rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tag-nintendo {
+      background: rgba(204, 68, 68, 0.2);
+      color: #e08080;
+    }
+
+    .tag-sony {
+      background: rgba(85, 136, 204, 0.2);
+      color: #88b8e8;
+    }
+
+    .tag-sega {
+      background: rgba(68, 153, 140, 0.2);
+      color: #70bbb0;
+    }
+
+    /* ── panel (launch controls) ────────────── */
+    .panel {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 0.3rem;
+    }
+
+    .panel .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+      line-height: 1.45;
+    }
+
+    label.file {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.8rem;
+      color: var(--text);
+      padding: 0.4rem;
+      border-radius: 5px;
+      border: 1px dashed var(--border);
+      background: var(--bg);
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      margin-right: 0.5rem;
+      padding: 0.3rem 0.55rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface-raised);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+
+    button.primary {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-dim);
+    }
+
+    button.primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    button.ghost {
+      padding: 0.5rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.12s, border-color 0.12s;
+    }
+
+    button.ghost:hover {
+      border-color: #555;
+      color: var(--text);
+    }
+
+    /* ── viewer area ────────────────────────── */
+    .viewer-wrap {
+      position: relative;
+      min-height: 420px;
+      background: #0a0a0a;
+    }
+
+    .viewer-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      z-index: 1;
+    }
+
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-size: 0.9rem;
+      padding: 2rem;
+      text-align: center;
+      z-index: 0;
+    }
+
+    .placeholder.hidden {
+      display: none;
+    }
+
+    /* ── footer ─────────────────────────────── */
+    footer {
+      padding: 0.7rem 1.2rem;
+      font-size: 0.72rem;
+      color: #555;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      text-align: center;
+    }
+
+    /* ── favorites ──────────────────────────── */
+    .favorites-section {
+      margin-bottom: 0.8rem;
+    }
+
+    .fav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .fav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 5px;
+      background: var(--surface);
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+
+    .fav-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .fav-remove {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .fav-remove:hover {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    .fav-toggle,
+    .fav-toggle-sm {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+      color: var(--muted);
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .fav-toggle:hover,
+    .fav-toggle-sm:hover {
+      transform: scale(1.2);
+    }
+
+    .fav-toggle.active,
+    .fav-toggle-sm.active {
+      color: var(--accent);
+    }
+
+    .fav-toggle-sm {
+      font-size: 0.85rem;
+    }
+
+    /* ── emulator toolbar ──────────────────── */
+    .emu-toolbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .viewer-wrap:hover .emu-toolbar.visible {
+      opacity: 1;
+    }
+
+    .emu-toolbar button {
+      padding: 0.4rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.7);
+      color: #ccc;
+      font-family: inherit;
+      font-size: 0.78rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .emu-toolbar button:hover {
+      background: rgba(0, 0, 0, 0.9);
+      border-color: var(--accent-dim);
+      color: #fff;
+    }
+
+    /* ── screenshot gallery ─────────────────── */
+    .screenshot-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+    }
+
+    .screenshot-thumb {
+      position: relative;
+      aspect-ratio: 4/3;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--bg);
+    }
+
+    .screenshot-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .ss-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .screenshot-thumb:hover .ss-overlay {
+      opacity: 1;
+    }
+
+    .ss-meta {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.2rem 0.4rem;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+      font-size: 0.6rem;
+      color: #aaa;
+    }
+
+    .ss-empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── lightbox ───────────────────────────── */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .lightbox-overlay.open {
+      display: flex;
+    }
+
+    .lightbox-overlay img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 6px;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .lightbox-close:hover {
+      color: #fff;
+    }
+
+    .lightbox-actions {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ── stats grid ─────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-card {
+      padding: 0.7rem;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+
+    /* ── achievements ──────────────────────── */
+    .achievements-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .achievement {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .achievement.unlocked {
+      border-color: var(--accent-dim);
+      background: rgba(224, 120, 64, 0.06);
+    }
+
+    .achievement.locked {
+      opacity: 0.5;
+    }
+
+    .ach-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      width: 1.8rem;
+      text-align: center;
+    }
+
+    .ach-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ach-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .ach-desc {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .ach-check {
+      color: var(--accent);
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .progress-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      margin-top: 0.3rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    /* ── toast ──────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--accent-dim);
+      color: var(--text-bright);
+      font-family: inherit;
+      font-size: 0.85rem;
+      z-index: 400;
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.35s ease, opacity 0.35s ease;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ── tab bar ──────────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    main.active {
+      display: grid;
+    }
+
+    /* ── tab content pages ───────────────── */
+    .page-wrap {
+      min-height: calc(100vh - 7.5rem);
+      padding: 2rem;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .page-heading {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 0.3rem;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .page-section {
+      margin-bottom: 2rem;
+    }
+
+    .page-section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    /* library cards */
+    /* library (simple list) */
+    .library-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .library-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .library-item:hover {
+      border-color: var(--accent);
+      background: rgba(224, 120, 64, 0.05);
+      transform: translateX(4px);
+    }
+
+    .li-name {
+      font-weight: 600;
+      color: var(--text-bright);
+      font-size: 1rem;
+    }
+
+    /* page-level stats (wider) */
+    .page-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 700px) {
+      .page-stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* page-level achievements (wider) */
+    .page-achievements-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 700px) {
+      .page-achievements-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* page gallery */
+    .page-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .page-empty {
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+    }
+
+    /* ── leaderboard ───────────────────── */
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      gap: 1.2rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .leaderboard-item.is-me {
+      border-color: var(--accent);
+      background: linear-gradient(90deg, rgba(224, 120, 64, 0.05) 0%, var(--surface) 100%);
+      box-shadow: 0 0 15px rgba(224, 120, 64, 0.1);
+    }
+
+    .rank-num {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--muted);
+      width: 24px;
+      text-align: center;
+    }
+
+    .rank-1 .rank-num { color: #ffd700; font-size: 1.5rem; }
+    .rank-2 .rank-num { color: #c0c0c0; font-size: 1.3rem; }
+    .rank-3 .rank-num { color: #cd7f32; font-size: 1.2rem; }
+
+    .leaderboard-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .leaderboard-info {
+      flex: 1;
+    }
+
+    .lb-name {
+      font-weight: 700;
+      color: var(--text-bright);
+      font-size: 1rem;
+    }
+
+    .lb-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      gap: 1rem;
+    }
+
+    .lb-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .lb-stat b {
+      color: var(--text);
+    }
+
+    /* ── footer (updated) ───────────────── */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-link {
+      color: var(--muted);
+      font-size: 0.72rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color 0.15s;
+    }
+
+    .footer-link:hover {
+      color: var(--accent);
+    }
+
+    .footer-sep {
+      color: var(--border);
+      font-size: 0.72rem;
+    }
+
+    /* ── contact form ──────────────────── */
+    .contact-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      resize: vertical;
+    }
+
+    .contact-textarea:focus {
+      outline: none;
+      border-color: var(--accent-dim);
+    }
+
+    .contact-success {
+      padding: 0.8rem;
+      border-radius: 6px;
+      background: rgba(68, 153, 140, 0.1);
+      border: 1px solid rgba(68, 153, 140, 0.25);
+      color: var(--cyan);
+      font-size: 0.82rem;
+      text-align: center;
+      display: none;
+    }
+
+    .contact-success.show {
+      display: block;
+    }
+
+    /* ── theme picker ───────────────────── */
+    .theme-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.3rem 0.5rem;
+      transition: border-color 0.15s;
+    }
+
+    .theme-btn:hover {
+      border-color: var(--accent-dim);
+      color: var(--text);
+    }
+
+    .theme-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.4rem;
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem;
+      z-index: 50;
+      display: none;
+      min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .theme-dropdown.open {
+      display: block;
+    }
+
+    .theme-option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      width: 100%;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.1s;
+    }
+
+    .theme-option:hover {
+      background: var(--surface);
+    }
+
+    .theme-option.active {
+      color: var(--accent);
+    }
+
+    .theme-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+    }
+
+    /* ── Chat ────────────────────────────── */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 120px);
+      max-height: 800px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .chat-message {
+      display: flex;
+      flex-direction: column;
+      max-width: 80%;
+    }
+
+    .chat-me    .badge-pro { background: var(--accent); color: #000; font-size: 0.65rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; vertical-align: middle; box-shadow: 0 0 10px rgba(224, 120, 64, 0.4); }
+    /* Admin Styles */
+    .admin-code-box { background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0; border: 1px dashed var(--accent); text-align: center; }
+    .admin-code-text { font-family: monospace; font-size: 1.8rem; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 1rem; }
+    .logo { cursor: pointer; user-select: none; }
+
+    .chat-message.me {
+      align-self: flex-end;
+    }
+
+    .chat-message.other {
+      align-self: flex-start;
+    }
+
+    .chat-sender {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-message.me .chat-sender {
+      justify-content: flex-end;
+    }
+
+    .chat-bubble {
+      padding: 0.75rem 1rem;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .chat-message.other .chat-bubble {
+      background: var(--surface-raised);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-message.me .chat-bubble {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--surface-raised);
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-input-area input {
+      flex: 1;
+    }
+
+    /* ── Pro Styles ────────────────────────── */
+    .badge-pro {
+      background: linear-gradient(135deg, #ffd700 0%, #e0a500 100%);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-left: 0.4rem;
+    }
+
+    .header-pro-tag {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      font-size: 0.55rem;
+      padding: 0.05rem 0.25rem;
+      border: 2px solid var(--surface);
+      pointer-events: none;
+      z-index: 2;
+      margin-left: 0;
+    }
+
+    .pro-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .pro-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      transition: transform 0.3s, border-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pro-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+    }
+
+    .pro-card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .pro-card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 0.5rem;
+    }
+
+    .pro-card-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .pro-pricing {
+      margin-top: 3rem;
+      text-align: center;
+      background: var(--surface-raised);
+      padding: 3rem;
+      border-radius: 20px;
+      border: 2px solid var(--accent);
+    }
+
+    .pro-price {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--text-bright);
+      margin: 1rem 0;
+    }
+
+    .pro-price span {
+      font-size: 1.2rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .theme-option.locked, .sys-btn.locked {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .theme-option.locked::after, .sys-btn.locked::after {
+      content: "PRO";
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      margin-left: auto;
+    }
+    /* ── Ads ─────────────────────────────── */
+    .ad-container {
+      display: none;
+      background:
+        radial-gradient(circle at top left, rgba(255, 119, 43, 0.2), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(255, 238, 0, 0.16), transparent 36%),
+        linear-gradient(145deg, #16120f 0%, #111 48%, #24170f 100%);
+      background-size: cover;
+      background-position: center;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .ad-container.visible {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ad-label {
+      position: absolute;
+      top: 0; right: 0;
+      font-size: 0.55rem;
+      color: rgba(255,255,255,0.5);
+      padding: 0.3rem 0.5rem;
+      background: rgba(0,0,0,0.3);
+      border-bottom-left-radius: 4px;
+      z-index: 2;
+    }
+
+    .ad-content {
+      padding: 2.5rem 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+    }
+
+    .ad-logo-top {
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+
+    .ad-title-large {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: white;
+      line-height: 1.1;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .ad-subtitle {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.9);
+      line-height: 1.4;
+      font-weight: 400;
+    }
+
+    .ad-btn-premium {
+      background: #0078ff;
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 15px rgba(0,120,255,0.4);
+    }
+
+    .ad-btn-premium:hover {
+      transform: scale(1.05);
+      background: #0088ff;
+    }
+
+    .ad-sidebar {
+      min-height: 480px;
+      margin-top: 2rem;
+    }
+
+    .ad-banner {
+      width: 100%;
+      min-height: 120px;
+      margin: 0;
+      border-radius: 0;
+      border: none;
+    }
+
+    .ad-banner .ad-content {
+      flex-direction: row;
+      padding: 1rem 2rem;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    /* ═══════════════════════════════════════════════════════════════════
+       RETROUNIVERSE · ARCADE / CRT RESTYLE (OVERRIDE LAYER)
+       Matches the marketing homepage aesthetic. Does not touch HTML or JS.
+       ═══════════════════════════════════════════════════════════════════ */
+
+    /* Global background — radial neon glows + faint grid */
+    body {
+      background-image:
+        radial-gradient(ellipse at 15% 0%, rgba(255, 46, 151, 0.15), transparent 55%),
+        radial-gradient(ellipse at 85% 20%, rgba(79, 227, 255, 0.10), transparent 50%),
+        linear-gradient(rgba(255, 46, 151, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 46, 151, 0.05) 1px, transparent 1px);
+      background-size: auto, auto, 48px 48px, 48px 48px;
+      background-attachment: fixed;
+      font-family: 'Space Grotesk', -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,0,0,0.22) 3px, transparent 4px);
+      mix-blend-mode: multiply;
+      opacity: 0.55;
+    }
+    /* Noise texture */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9997;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.08 0'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+      opacity: 0.4;
+    }
+    /* Modals / toasts / dropdowns must float above overlays */
+    .modal-overlay, .toast, .dropdown, .theme-dropdown, .lightbox-overlay { z-index: 10000 !important; }
+
+    /* ─── Typography ─── */
+    h1, h2, h3, h4, .page-heading, .panel h2, .modal h2 {
+      font-family: 'Space Grotesk', sans-serif !important;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .logo, .header-left h1 {
+      font-family: 'Space Grotesk', sans-serif !important;
+      font-weight: 700;
+      font-size: 1.5rem !important;
+      letter-spacing: -0.01em;
+      color: var(--text-bright) !important;
+      text-shadow: 1px 0 0 var(--accent), -1px 0 0 var(--cyan);
+    }
+    .header-left p {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+    }
+    .section-title, .page-section-title, .form-group label {
+      font-family: 'VT323', monospace !important;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-size: 1.15rem !important;
+    }
+    .section-title {
+      color: var(--accent) !important;
+      padding-left: 0.6rem;
+      border-left: 3px solid var(--accent);
+    }
+    .section-title.style-nintendo { color: var(--red) !important; border-left-color: var(--red); }
+    .section-title.style-sony     { color: var(--cyan) !important; border-left-color: var(--cyan); }
+    .section-title.style-sega     { color: var(--amber) !important; border-left-color: var(--amber); }
+
+    /* ─── Header ─── */
+    header {
+      background: rgba(10, 6, 18, 0.85) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 46, 151, 0.3) !important;
+      box-shadow: 0 0 30px rgba(255, 46, 151, 0.08);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ─── Auth buttons ─── */
+    .btn-auth {
+      font-family: 'VT323', monospace !important;
+      font-size: 1rem !important;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      border: 2px solid var(--border) !important;
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s !important;
+    }
+    .btn-auth:hover {
+      border-color: var(--cyan) !important;
+      background: transparent !important;
+      color: var(--cyan) !important;
+    }
+    .btn-auth.accent {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: #0a0612 !important;
+      font-weight: 700;
+      box-shadow: 3px 3px 0 var(--cyan);
+    }
+    .btn-auth.accent:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 var(--cyan);
+      background: var(--accent) !important;
+      color: #0a0612 !important;
+    }
+
+    /* ─── Avatar / theme toggle ─── */
+    .avatar-btn {
+      border-radius: 0 !important;
+      border: 2px solid var(--accent) !important;
+      font-family: 'Space Grotesk', sans-serif !important; font-weight: 700;
+      background: var(--surface-raised) !important;
+      color: var(--accent) !important;
+      box-shadow: 2px 2px 0 var(--cyan);
+    }
+    .avatar-btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--cyan); }
+
+    .theme-btn {
+      border-radius: 0 !important;
+      border: 2px solid var(--border) !important;
+      background: var(--surface-raised) !important;
+      box-shadow: 2px 2px 0 rgba(255, 46, 151, 0.3);
+      transition: all 0.15s !important;
+    }
+    .theme-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 var(--accent);
+      border-color: var(--accent) !important;
+    }
+
+    /* ─── Dropdowns ─── */
+    .dropdown, .theme-dropdown {
+      border-radius: 0 !important;
+      border: 1px solid var(--accent) !important;
+      background: var(--surface) !important;
+      box-shadow: 4px 4px 0 var(--cyan), 0 0 24px rgba(255, 46, 151, 0.2) !important;
+    }
+    .dropdown-item, .theme-option {
+      font-family: 'VT323', monospace !important;
+      font-size: 1rem !important;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+    }
+    .dropdown-item:hover { background: rgba(255, 46, 151, 0.12) !important; color: var(--accent) !important; }
+    .theme-option.active { background: rgba(255, 46, 151, 0.12) !important; color: var(--accent) !important; }
+    .theme-swatch { border-radius: 0 !important; }
+
+    /* ─── Tab bar ─── */
+    .tab-bar {
+      background: rgba(10, 6, 18, 0.7) !important;
+      border-bottom: 2px solid var(--accent) !important;
+      box-shadow: 0 0 20px rgba(255, 46, 151, 0.15);
+    }
+    .tab-btn {
+      font-family: 'VT323', monospace !important;
+      font-size: 1.1rem !important;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      border-bottom: 3px solid transparent !important;
+      transition: color 0.15s, border-color 0.15s !important;
+    }
+    .tab-btn:hover { color: var(--cyan) !important; background: transparent !important; }
+    .tab-btn.active {
+      color: var(--amber) !important;
+      border-bottom-color: var(--amber) !important;
+      background: transparent !important;
+      text-shadow: 0 0 12px rgba(255, 182, 39, 0.5);
+    }
+
+    /* ─── System buttons (cartridges) ─── */
+    .sys-btn {
+      font-family: 'VT323', monospace !important;
+      font-size: 1.05rem !important;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      border: 1px solid var(--border) !important;
+      background: var(--surface-raised) !important;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s !important;
+    }
+    .sys-btn:hover {
+      transform: translate(-1px, -1px);
+      border-color: var(--accent) !important;
+      box-shadow: 3px 3px 0 var(--accent);
+    }
+    .sys-btn.active {
+      border: 1px solid var(--amber) !important;
+      border-top: 3px solid var(--amber) !important;
+      box-shadow: 4px 4px 0 var(--amber), inset 0 0 0 1px var(--amber);
+      color: var(--text-bright) !important;
+    }
+    .sys-btn .tag {
+      font-family: 'VT323', monospace !important;
+      font-size: 0.75rem !important;
+      letter-spacing: 0.1em;
+      border-radius: 0 !important;
+      text-transform: uppercase;
+      padding: 1px 6px;
+    }
+    .tag-nintendo { background: rgba(255, 92, 122, 0.15) !important; color: var(--red) !important; border: 1px solid var(--red) !important; }
+    .tag-sony     { background: rgba(79, 227, 255, 0.12) !important; color: var(--cyan) !important; border: 1px solid var(--cyan) !important; }
+    .tag-sega     { background: rgba(255, 182, 39, 0.15) !important; color: var(--amber) !important; border: 1px solid var(--amber) !important; }
+
+    /* ─── Launch panel (BIOS-style window) ─── */
+    .panel {
+      background: var(--surface) !important;
+      border: 1px solid var(--accent) !important;
+      border-radius: 0 !important;
+      box-shadow: 0 0 24px rgba(255, 46, 151, 0.15);
+      position: relative;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+    }
+    .panel h2 {
+      font-family: 'Space Grotesk', sans-serif !important; font-weight: 700;
+      font-size: 1.4rem !important;
+      color: var(--text-bright) !important;
+      text-shadow: 1px 0 0 var(--accent), -1px 0 0 var(--cyan);
+    }
+    .panel .hint { font-family: 'IBM Plex Mono', monospace !important; color: var(--muted); font-size: 0.8rem; }
+
+    /* ─── Forms ─── */
+    .form-input, input[type="file"], input[type="text"], input[type="email"],
+    input[type="password"], .contact-textarea {
+      border-radius: 0 !important;
+      border: 1px solid var(--border) !important;
+      background: var(--surface-raised) !important;
+      font-family: 'IBM Plex Mono', monospace !important;
+      font-size: 0.85rem !important;
+      color: var(--text-bright) !important;
+      transition: border-color 0.15s, box-shadow 0.15s !important;
+    }
+    .form-input:focus, input:focus, .contact-textarea:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 1px var(--accent), 0 0 16px rgba(255, 46, 151, 0.2) !important;
+      outline: none !important;
+    }
+
+    /* ─── Buttons ─── */
+    button.primary, .primary {
+      font-family: 'VT323', monospace !important;
+      font-size: 1.1rem !important;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      border: none !important;
+      background: var(--amber) !important;
+      color: #0a0612 !important;
+      font-weight: 700 !important;
+      box-shadow: 4px 4px 0 var(--accent) !important;
+      padding: 0.6rem 1.2rem !important;
+      transition: transform 0.15s, box-shadow 0.15s !important;
+    }
+    button.primary:hover, .primary:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--accent) !important; }
+
+    button.ghost, .ghost {
+      font-family: 'VT323', monospace !important;
+      font-size: 1.05rem !important;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      background: transparent !important;
+      border: 2px solid var(--text) !important;
+      color: var(--text) !important;
+      box-shadow: none !important;
+    }
+    button.ghost:hover, .ghost:hover { border-color: var(--cyan) !important; color: var(--cyan) !important; }
+
+    .btn-small {
+      font-family: 'VT323', monospace !important;
+      font-size: 1rem !important;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      background: var(--surface-raised) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+    }
+    .btn-small:hover { border-color: var(--accent) !important; color: var(--accent) !important; background: var(--surface-raised) !important; }
+    .btn-small.danger { color: var(--danger) !important; border-color: var(--danger) !important; }
+    .btn-small.danger:hover { background: var(--danger) !important; color: #0a0612 !important; }
+
+    /* ─── Fav toggle ─── */
+    .fav-toggle, .fav-toggle-sm {
+      border-radius: 0 !important;
+      background: transparent !important;
+      border: 1px solid var(--border) !important;
+      font-family: 'VT323', monospace !important;
+    }
+    .fav-toggle.active, .fav-toggle-sm.active {
+      color: var(--amber) !important;
+      border-color: var(--amber) !important;
+      box-shadow: 0 0 12px rgba(255, 182, 39, 0.4);
+    }
+
+    /* ─── Emulator viewer ─── */
+    .viewer-wrap {
+      border: 1px solid var(--border) !important;
+      background: #000 !important;
+      border-radius: 0 !important;
+    }
+    .placeholder {
+      font-family: 'VT323', monospace !important;
+      font-size: 1.6rem !important;
+      letter-spacing: 0.08em;
+      color: var(--cyan) !important;
+      text-shadow: 0 0 12px rgba(79, 227, 255, 0.3);
+    }
+    .emu-toolbar button {
+      font-family: 'VT323', monospace !important;
+      font-size: 0.95rem !important;
+      letter-spacing: 0.08em;
+      border-radius: 0 !important;
+      background: rgba(10, 6, 18, 0.85) !important;
+      border: 1px solid var(--accent) !important;
+      color: var(--text-bright) !important;
+    }
+    .emu-toolbar button:hover { background: var(--accent) !important; color: #0a0612 !important; }
+
+    /* ─── Cards (library / stats / achievements / pro) ─── */
+    .library-item, .stat-card, .pro-card, .achievement {
+      border-radius: 0 !important;
+      border: 1px solid var(--border) !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent) !important;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s !important;
+    }
+    .library-item::before, .stat-card::before, .pro-card::before, .achievement::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--accent);
+      transition: width 0.2s, background 0.2s;
+    }
+    .library-item:hover, .stat-card:hover, .pro-card:hover, .achievement:hover {
+      transform: translateY(-3px);
+      border-color: var(--cyan) !important;
+    }
+    .library-item:hover::before, .stat-card:hover::before, .pro-card:hover::before, .achievement:hover::before {
+      width: 8px;
+      background: var(--cyan);
+    }
+    .achievement.unlocked::before { background: var(--amber); }
+
+    .stat-value, .pro-price {
+      font-family: 'Space Grotesk', sans-serif !important; font-weight: 700;
+      color: var(--amber) !important;
+      text-shadow: 0 0 16px rgba(255, 182, 39, 0.4);
+    }
+    .stat-label, .pro-card-title, .ach-name {
+      font-family: 'VT323', monospace !important;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 1.15rem !important;
+      color: var(--text-bright) !important;
+    }
+    .pro-card-desc, .ach-desc { font-family: 'IBM Plex Mono', monospace !important; font-size: 0.8rem; }
+    .li-name { font-family: 'VT323', monospace !important; font-size: 1.15rem !important; letter-spacing: 0.04em; }
+
+    /* ─── Page headings ─── */
+    .page-heading {
+      font-family: 'Space Grotesk', sans-serif !important;
+      font-weight: 700 !important;
+      font-size: 2.4rem !important;
+      letter-spacing: -0.01em;
+      color: var(--text-bright) !important;
+      text-shadow: 1px 0 0 var(--accent), -1px 0 0 var(--cyan);
+    }
+    .page-subtitle {
+      color: var(--muted) !important;
+      font-family: 'Space Grotesk', sans-serif !important;
+      font-size: 0.92rem !important;
+    }
+
+    /* ─── Leaderboard ─── */
+    .leaderboard-item {
+      border-radius: 0 !important;
+      border: 1px solid var(--border) !important;
+      background: var(--surface) !important;
+      border-left: 4px solid var(--accent) !important;
+    }
+    .leaderboard-item.is-me {
+      border-left-color: var(--amber) !important;
+      background: rgba(255, 182, 39, 0.05) !important;
+    }
+    .rank-num { font-family: 'Space Grotesk', sans-serif !important; font-weight: 700; }
+    .lb-name { font-family: 'VT323', monospace !important; letter-spacing: 0.04em; font-size: 1.15rem !important; }
+
+    /* ─── Toast ─── */
+    .toast {
+      font-family: 'VT323', monospace !important;
+      font-size: 1.15rem !important;
+      letter-spacing: 0.06em;
+      border-radius: 0 !important;
+      background: var(--surface) !important;
+      border: 2px solid var(--amber) !important;
+      color: var(--text-bright) !important;
+      box-shadow: 6px 6px 0 var(--accent), 0 0 30px rgba(255, 182, 39, 0.3) !important;
+    }
+
+    /* ─── Modals ─── */
+    .modal {
+      border-radius: 0 !important;
+      background: var(--surface) !important;
+      border: 2px solid var(--text-bright) !important;
+      box-shadow: 8px 8px 0 var(--accent), -8px -8px 0 var(--cyan) !important;
+    }
+    .modal::before, .modal::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      background: var(--amber);
+      z-index: 1;
+    }
+    .modal::before { top: -4px; left: -4px; }
+    .modal::after  { bottom: -4px; right: -4px; }
+    .modal h2 {
+      font-family: 'Space Grotesk', sans-serif !important; font-weight: 700;
+      text-shadow: 1px 0 0 var(--accent), -1px 0 0 var(--cyan);
+    }
+    .modal-close { border-radius: 0 !important; }
+    .modal-close:hover { color: var(--accent) !important; }
+
+    /* ─── PRO badge ─── */
+    .badge-pro, .header-pro-tag {
+      font-family: 'VT323', monospace !important;
+      background: var(--amber) !important;
+      color: #0a0612 !important;
+      border-radius: 0 !important;
+      letter-spacing: 0.1em !important;
+      box-shadow: 0 0 12px rgba(255, 182, 39, 0.6) !important;
+    }
+
+    /* ─── Chat ─── */
+    .chat-bubble {
+      font-family: 'IBM Plex Mono', monospace !important;
+      border-radius: 0 !important;
+    }
+    .chat-message.other .chat-bubble {
+      background: var(--surface-raised) !important;
+      border: 1px solid var(--border) !important;
+      border-left: 3px solid var(--cyan) !important;
+    }
+    .chat-message.me .chat-bubble {
+      background: var(--surface-raised) !important;
+      border: 1px solid var(--accent) !important;
+      border-right: 3px solid var(--accent) !important;
+      color: var(--text-bright) !important;
+    }
+    .chat-sender {
+      font-family: 'VT323', monospace !important;
+      font-size: 0.85rem !important;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .chat-sender strong { color: var(--cyan) !important; }
+    .chat-message.me .chat-sender strong { color: var(--accent) !important; }
+    .chat-input-area input { border-radius: 0 !important; }
+
+    /* ─── Progress bar ─── */
+    .progress-bar { border-radius: 0 !important; background: var(--surface) !important; }
+    .progress-fill {
+      background: linear-gradient(90deg, var(--accent), var(--amber)) !important;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    /* ─── Screenshots ─── */
+    .screenshot-thumb { border-radius: 0 !important; border: 1px solid var(--border) !important; }
+    .lightbox-close { border-radius: 0 !important; }
+
+    /* ─── Ads (retro arcade banner) ─── */
+    .ad-container {
+      border-radius: 0 !important;
+      border: 2px dashed var(--amber) !important;
+      background: linear-gradient(135deg, rgba(255, 46, 151, 0.06), rgba(79, 227, 255, 0.06)) !important;
+      position: relative;
+    }
+    .ad-label {
+      font-family: 'VT323', monospace !important;
+      background: var(--amber) !important;
+      color: #0a0612 !important;
+      border-radius: 0 !important;
+      letter-spacing: 0.15em;
+    }
+    .ad-title-large {
+      font-family: 'Space Grotesk', sans-serif !important; font-weight: 700;
+      color: var(--text-bright) !important;
+      text-shadow: 1px 0 0 var(--accent), -1px 0 0 var(--cyan);
+    }
+    .ad-logo-top {
+      font-family: 'Space Grotesk', sans-serif !important; font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .ad-subtitle { font-family: 'IBM Plex Mono', monospace !important; }
+    .ad-btn-premium {
+      font-family: 'VT323', monospace !important;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 0 !important;
+      background: var(--amber) !important;
+      color: #0a0612 !important;
+      box-shadow: 3px 3px 0 var(--accent) !important;
+      transition: transform 0.15s, box-shadow 0.15s !important;
+    }
+    .ad-btn-premium:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--accent) !important; }
+
+    /* ─── Pro pricing ─── */
+    .pro-pricing {
+      border-radius: 0 !important;
+      border: 1px solid var(--border) !important;
+      background: var(--surface) !important;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s !important;
+    }
+    .pro-pricing:hover {
+      border-color: var(--accent) !important;
+      box-shadow: 6px 6px 0 var(--accent);
+      transform: translate(-2px, -2px);
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      background: rgba(10, 6, 18, 0.85) !important;
+      border-top: 1px solid rgba(255, 46, 151, 0.2) !important;
+      font-family: 'IBM Plex Mono', monospace !important;
+      font-size: 0.75rem !important;
+    }
+    .footer-link {
+      font-family: 'VT323', monospace !important;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .footer-link:hover { color: var(--accent) !important; }
+
+    /* ─── Profile ─── */
+    .profile-avatar { border-radius: 0 !important; border: 2px solid var(--accent) !important; }
+    .profile-section { border-radius: 0 !important; }
+
+    /* ─── Admin code box ─── */
+    .admin-code-box { border-radius: 0 !important; border: 1px dashed var(--accent) !important; }
+    .admin-code-text { font-family: 'VT323', monospace !important; color: var(--amber) !important; text-shadow: 0 0 12px rgba(255, 182, 39, 0.4); }
+
+    /* ─── Locked states ─── */
+    .theme-option.locked::after, .sys-btn.locked::after {
+      background: rgba(255, 182, 39, 0.9) !important;
+      color: #0a0612 !important;
+      border-radius: 0 !important;
+      font-family: 'VT323', monospace !important;
+    }
+
+    /* ─── Scrollbars ─── */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border: 1px solid var(--bg); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+
+    /* Text selection */
+    ::selection { background: var(--accent); color: #0a0612; }
+
+    /* Save notice / misc */
+    .save-notice { border-radius: 0 !important; font-family: 'VT323', monospace !important; letter-spacing: 0.08em; }
+    .form-switch { font-family: 'IBM Plex Mono', monospace !important; }
+    .history-list li { font-family: 'IBM Plex Mono', monospace !important; }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-left">
+        <h1 class="logo">RetroUniverse</h1>
+      <p>
+        Play legally obtained ROM dumps in the browser via
+        <a href="https://emulatorjs.org/" rel="noopener">EmulatorJS</a>.
+      </p>
+    </div>
+    <div class="header-right" style="display:flex;align-items:center;gap:15px;">
+      <div class="auth-area" id="auth-area">
+        <!-- filled by JS -->
+      </div>
+      <div style="position:relative">
+        <button class="theme-btn" id="theme-toggle" title="Change theme">🎨</button>
+        <div class="theme-dropdown" id="theme-dropdown"></div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab-btn active" data-tab="play">🎮 Play</button>
+    <button class="tab-btn" data-tab="library">📚 Library</button>
+    <button class="tab-btn" data-tab="news">📰 News</button>
+    <button class="tab-btn" data-tab="stats">🏆 Stats & Achievements</button>
+    <button class="tab-btn" data-tab="screenshots">📷 Screenshots</button>
+    <button class="tab-btn" data-tab="community">💬 Community</button>
+    <button class="tab-btn" data-tab="pro" style="color:var(--accent); font-weight:700;">⭐ PRO</button>
+  </nav>
+
+  <main class="tab-panel active" id="tab-play">
+    <aside class="sidebar">
+      <div class="favorites-section" id="favorites-section" hidden>
+        <div class="section-title">⭐ Favorites</div>
+        <div class="fav-list" id="sidebar-favs"></div>
+      </div>
+
+      <div class="section-title style-nintendo">Nintendo</div>
+      <div class="systems" id="list-nintendo"></div>
+      <div class="section-title style-sony">Sony</div>
+      <div class="systems" id="list-sony"></div>
+      <div class="section-title style-sega">Sega</div>
+      <div class="systems" id="list-sega"></div>
+
+      <div class="panel" id="launch-panel" hidden>
+        <h2 id="launch-title">System</h2>
+        <p class="hint" id="launch-hint"></p>
+
+        <label class="file">ROM / disc image</label>
+        <input type="file" id="rom-file" />
+        <div id="bios-wrap" hidden>
+          <label class="file" id="bios-label">BIOS (optional)</label>
+          <input type="file" id="bios-file" />
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" id="btn-launch">Launch</button>
+          <button type="button" class="fav-toggle" id="btn-fav" title="Add to favorites">☆</button>
+          <button type="button" class="ghost" id="btn-reset">Reset player</button>
+        </div>
+      </div>
+
+      <!-- Sidebar Ad -->
+      <div class="ad-container ad-sidebar ad-target">
+        <div class="ad-label">AD</div>
+        <div class="ad-content">
+          <div class="ad-logo-top">RETROUNIVERSE</div>
+          <div class="ad-title-large">Good play is good business.</div>
+          <p class="ad-subtitle">Plans starting at $3/once.</p>
+          <button class="ad-btn-premium" onclick="switchTab('pro')">Buy now</button>
+          <div class="ad-logo-top" style="margin-top:auto; font-size:0.8rem; opacity:0.8">RW</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="viewer-column" style="display:flex; flex-direction:column; width:100%; overflow:hidden">
+      <!-- Banner Ad -->
+      <div class="ad-container ad-banner ad-target">
+        <div class="ad-label">AD</div>
+        <div class="ad-content">
+          <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.2rem">
+          <div class="ad-title-large" style="font-size:1.3rem">Make it with RetroUniverse.</div>
+            <div class="ad-subtitle">Apps for nostalgia, gaming, and fun.</div>
+          </div>
+          <button class="ad-btn-premium" onclick="switchTab('pro')">Join now</button>
+        </div>
+      </div>
+
+      <section class="viewer-wrap" style="flex-grow:1; width:100%">
+        <div class="emu-toolbar" id="emu-toolbar">
+          <button type="button" id="btn-screenshot" title="Capture screenshot">📷 Capture</button>
+          <button type="button" id="btn-fullscreen" title="Fullscreen">⛶ Fullscreen</button>
+        </div>
+        <div class="placeholder" id="viewer-placeholder">
+          Pick a system, upload a ROM, then Launch.
+        </div>
+        <iframe id="emu-frame" title="Emulator" hidden allow="autoplay; fullscreen; gamepad"></iframe>
+      </section>
+    </div>
+  </main>
+
+  <!-- ── Library Tab ─────────────────────── -->
+  <div class="tab-panel" id="tab-library">
+    <div class="page-wrap">
+      <h2 class="page-heading">📚 Library</h2>
+      <p class="page-subtitle">Your favorited games.</p>
+      <div class="library-grid" id="library-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── News Tab ────────────────────────── -->
+  <div class="tab-panel" id="tab-news">
+    <div class="page-wrap" style="height: calc(100vh - 180px); max-width: 1200px">
+      <h2 class="page-heading">📰 Retro Gaming News</h2>
+      <p class="page-subtitle">Latest updates from the world of classic gaming (via Retro Dodo).</p>
+      <div class="page-section" style="height: 100%; margin-top: 1.5rem; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #000">
+        <iframe src="https://retrododo.com" style="width: 100%; height: 100%; border: none" title="Retro News Feed"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stats Tab ───────────────────────── -->
+  <div class="tab-panel" id="tab-stats-old" hidden>
+    <div class="page-wrap">
+      <h2 class="page-heading">🏆 Stats & Achievements</h2>
+      <p class="page-subtitle">Track your retro gaming journey.</p>
+        <div class="page-section-title">Overview</div>
+        <div class="page-stats-grid" id="page-stats-grid-old"></div>
+      </div>
+      <div class="page-section">
+        <div class="page-section-title">Achievements</div>
+        <div class="page-achievements-list" id="page-achievements-list-old"></div>
+      </div>
+      <div class="page-section">
+        <div class="page-section-title">🏆 Global Rankings</div>
+          <div class="page-empty">Connecting to community stats...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-stats">
+    <div class="page-wrap">
+      <h2 class="page-heading">🏆 Stats & Achievements</h2>
+      <p class="page-subtitle">Track your retro gaming journey.</p>
+      <div class="page-section">
+        <div class="page-section-title">Overview</div>
+        <div class="page-stats-grid" id="page-stats-grid"></div>
+      </div>
+      <div class="page-section">
+        <div class="page-section-title">Achievements</div>
+        <div class="page-achievements-list" id="page-achievements-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screenshots Tab ────────────────── -->
+  <div class="tab-panel" id="tab-screenshots">
+    <div class="page-wrap">
+      <h2 class="page-heading">📷 Screenshots</h2>
+      <p class="page-subtitle">Captured gameplay moments. <span id="page-ss-count"></span></p>
+      <div class="page-gallery" id="page-screenshot-gallery"></div>
+    </div>
+  </div>
+
+  <!-- ── Pro Tab ────────────────────────── -->
+  <div class="tab-panel" id="tab-pro">
+    <div class="page-wrap" style="max-width: 1000px">
+      <div style="text-align:center; margin-bottom:3rem">
+          <h2 class="page-heading" style="font-size:3rem; margin-bottom:1rem">RetroUniverse <span style="color:var(--accent)">PRO</span></h2>
+        <p class="page-subtitle" style="font-size:1.1rem">Unlock the ultimate retro gaming experience.</p>
+      </div>
+
+      <div class="pro-card-grid">
+        <div class="pro-card" style="border-color:var(--accent)">
+          <div class="pro-card-icon">🚫</div>
+          <h3 class="pro-card-title">No Ads</h3>
+          <p class="pro-card-desc">Complete ad-free session. (PRO & PRO+)</p>
+        </div>
+        <div class="pro-card" style="border-color:var(--accent1)">
+          <div class="pro-card-icon">📱</div>
+          <h3 class="pro-card-title">Nintendo DS</h3>
+          <p class="pro-card-desc">Dual-screen handheld power. (PRO & PRO+)</p>
+        </div>
+        <div class="pro-card" style="border-color:var(--accent)">
+          <div class="pro-card-icon">🕹️</div>
+          <h3 class="pro-card-title">PSP (Experimental)</h3>
+          <p class="pro-card-desc">High-speed widescreen power. <b>(PRO+ EXCLUSIVE)</b></p>
+        </div>
+        <div class="pro-card">
+          <div class="pro-card-icon">📸</div>
+          <h3 class="pro-card-title">Max Screenshots</h3>
+          <p class="pro-card-desc">20 slots for your memories. (PRO & PRO+)</p>
+        </div>
+        <div class="pro-card">
+          <div class="pro-card-icon">🎨</div>
+          <h3 class="pro-card-title">All Themes</h3>
+          <p class="pro-card-desc">Sakura, Neon, and more. (PRO & PRO+)</p>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem; margin-top:3rem; max-width:900px; margin-inline:auto;">
+        <!-- PRO card -->
+        <div id="pro-card-standard" class="pro-pricing" onclick="selectTier('pro')" style="margin-top:0; cursor:pointer; transition: all 0.2s; position:relative;">
+              <h3 style="font-size:1.4rem; color:var(--text-bright)">RetroUniverse PRO</h3>
+          <div class="pro-price">$3</div>
+          <ul style="list-style:none; padding:0; margin:1.5rem 0; color:var(--text); display:flex; flex-direction:column; gap:0.5rem; font-size:0.85rem">
+            <li>✓ No Advertisements</li>
+            <li>✓ Sega Saturn & <b>Nintendo DS</b> Access</li>
+            <li>✓ 20 Screenshot Slots</li>
+            <li>✓ All Premium Themes</li>
+          </ul>
+          <button id="pro-btn-standard" class="btn-small ghost" style="width:100%">Select Plan</button>
+        </div>
+        
+        <!-- PRO PLUS card -->
+        <div id="pro-card-plus" class="pro-pricing" onclick="selectTier('pro_plus')" style="margin-top:0; cursor:pointer; transition: all 0.2s; position:relative;">
+          <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent1); color:black; font-size:0.65rem; font-weight:900; padding:4px 12px; border-radius:100px; letter-spacing:1px">BEST VALUE</div>
+          <h3 style="font-size:1.4rem; color:var(--accent1)">PRO PLUS</h3>
+          <div class="pro-price" style="color:var(--accent1)">$5</div>
+          <ul style="list-style:none; padding:0; margin:1.5rem 0; color:var(--text); display:flex; flex-direction:column; gap:0.5rem; font-size:0.85rem">
+            <li><b>✓ Everything in PRO</b></li>
+            <li><b>✓ PSP (Experimental)</b></li>
+            <li>✓ Priority "PRO+" Discord Badge</li>
+            <li>✓ Direct Developer Feedback</li>
+          </ul>
+          <button id="pro-btn-plus" class="btn-small ghost" style="width:100%">Select Plan</button>
+        </div>
+      </div>
+
+        <div id="pro-unlock-container" style="margin-top:2rem; text-align:center"></div>
+        <p style="margin-top:1.5rem; font-size:0.8rem; color:var(--muted)">Manual code activation. Codes work for both tiers.</p>
+
+      <div style="margin-top:4rem; text-align:center; color:var(--muted); font-size:0.85rem">
+        Manual account activation.
+      </div>
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-community">
+    <div class="page-wrap" style="max-width: 800px; margin: 0 auto;">
+      <h2 class="page-heading">💬 Community Global Chat</h2>
+      <p class="page-subtitle">Talk with other retro gamers.</p>
+      
+      <div class="chat-layout">
+        <div class="chat-messages" id="chat-messages">
+          <div class="page-empty">Loading chat...</div>
+        </div>
+        <form class="chat-input-area" id="chat-form">
+          <input type="text" class="form-input" id="chat-input" placeholder="Type a message..." disabled autocomplete="off" />
+          <button type="submit" class="primary" id="chat-send-btn" disabled>Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span style="font-size:0.72rem;color:#555">You must own the games you emulate. | v1.0.0</span>
+    <span class="footer-sep">·</span>
+    <button class="footer-link" id="open-contact">Contact Us</button>
+  </footer>
+
+  <!-- ── Contact Modal ──────────────────── -->
+  <div class="modal-overlay" id="modal-contact">
+    <div class="modal">
+      <button class="modal-close" data-close>&times;</button>
+      <h2>✉️ Contact Us</h2>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
+        Have a question, suggestion, or feature request? Send us a message.
+      </p>
+      <div class="form-group">
+        <label for="contact-name">Your name</label>
+        <input class="form-input" id="contact-name" type="text" placeholder="John Doe" />
+      </div>
+      <div class="form-group">
+        <label for="contact-email">Your email</label>
+        <input class="form-input" id="contact-email" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="contact-subject">Subject</label>
+        <input class="form-input" id="contact-subject" type="text"
+          placeholder="Feature request, bug report, question..." />
+      </div>
+      <div class="form-group">
+        <label for="contact-message">Message</label>
+        <textarea class="contact-textarea" id="contact-message" placeholder="Tell us what's on your mind..."></textarea>
+      </div>
+      <div class="contact-success" id="contact-success">
+        ✅ Your email client should open with the message. If it didn't, you can email us directly at
+        <strong>RetroWebSupport@proton.me</strong>
+      </div>
+      <div class="form-actions">
+        <button class="primary" id="contact-submit">📨 Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Login Modal ─────────────────────── -->
+  <div class="modal-overlay" id="modal-login">
+    <div class="modal">
+      <button class="modal-close" data-close>&times;</button>
+      <h2>Log in</h2>
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input class="form-input" id="login-email" type="email" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="login-pass">Password</label>
+        <input class="form-input" id="login-pass" type="password" autocomplete="current-password" />
+      </div>
+      <div class="form-error" id="login-error"></div>
+      <div class="form-actions">
+        <button class="primary" id="login-submit">Log in</button>
+      </div>
+      <p class="form-switch">
+        Don't have an account? <a id="switch-to-signup">Sign up</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Signup Modal ────────────────────── -->
+  <div class="modal-overlay" id="modal-signup">
+    <div class="modal">
+      <button class="modal-close" data-close>&times;</button>
+      <h2>Create account</h2>
+      <div class="form-group">
+        <label for="signup-name">Display name</label>
+        <input class="form-input" id="signup-name" type="text" autocomplete="name" />
+      </div>
+      <div class="form-group">
+        <label for="signup-email">Email</label>
+        <input class="form-input" id="signup-email" type="email" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="signup-pass">Password</label>
+        <input class="form-input" id="signup-pass" type="password" autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label for="signup-pass2">Confirm password</label>
+        <input class="form-input" id="signup-pass2" type="password" autocomplete="new-password" />
+      </div>
+      <div class="form-error" id="signup-error"></div>
+      <div class="form-actions">
+        <button class="primary" id="signup-submit">Create account</button>
+      </div>
+      <p class="form-switch">
+        Already have an account? <a id="switch-to-login">Log in</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Profile Modal ───────────────────── -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal" style="max-width:560px">
+      <button class="modal-close" data-close>&times;</button>
+      <h2>Profile</h2>
+      <div class="profile-header">
+        <div class="profile-avatar" id="profile-avatar" title="Click to change avatar"></div>
+        <input type="file" id="avatar-upload" accept="image/*" hidden />
+        <div class="profile-info">
+          <h3 id="profile-display-name"></h3>
+          <p id="profile-email"></p>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h4>Settings</h4>
+        <div class="form-group">
+          <label for="edit-name">Display name</label>
+          <input class="form-input" id="edit-name" type="text" />
+        </div>
+        <div class="profile-btn-row">
+          <button class="btn-small" id="save-profile">Save changes</button>
+          <button class="btn-small" id="change-pw-toggle">Change password</button>
+        </div>
+        <div id="pw-change-area" hidden style="margin-top:0.8rem">
+          <div class="form-group">
+            <label for="pw-old">Current password</label>
+            <input class="form-input" id="pw-old" type="password" />
+          </div>
+          <div class="form-group">
+            <label for="pw-new">New password</label>
+            <input class="form-input" id="pw-new" type="password" />
+          </div>
+          <div class="form-error" id="pw-error"></div>
+          <button class="btn-small" id="pw-save">Update password</button>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h4>Stats</h4>
+        <div class="stats-grid" id="stats-grid"></div>
+      </div>
+
+      <div class="profile-section">
+        <h4>Achievements</h4>
+        <div class="achievements-list" id="achievements-list"></div>
+      </div>
+
+      <div class="profile-section">
+        <h4>Screenshots <span id="ss-count" style="color:var(--muted);font-size:0.7rem"></span></h4>
+        <div class="screenshot-gallery" id="screenshot-gallery"></div>
+      </div>
+
+      <div class="profile-section">
+        <h4>Recent games</h4>
+        <ul class="history-list" id="game-history"></ul>
+      </div>
+
+
+
+      <div class="profile-section">
+        <button class="btn-small danger" id="delete-account">Delete account</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── Game Info Modal ────────────────────── -->
+  <div class="modal-overlay" id="modal-game-info">
+    <div class="modal" style="max-width:540px;padding:0;overflow:hidden;border:1px solid var(--border)">
+      <button class="modal-close" data-close style="position:absolute;top:1rem;right:1rem;z-index:10;background:rgba(0,0,0,0.6);border-radius:50%;width:32px;height:32px;border:1px solid rgba(255,255,255,0.1);color:#fff">&times;</button>
+      <div id="gi-banner" style="height:260px;background-size:cover;background-position:center;position:relative">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top, var(--surface) 0%, transparent 100%)"></div>
+        <div id="gi-badge" style="position:absolute;bottom:1rem;left:1.5rem;background:var(--accent);color:#fff;font-size:0.65rem;font-weight:800;padding:0.2rem 0.5rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em"></div>
+      </div>
+      <div style="padding:0 1.5rem 2rem">
+        <h2 id="gi-title" style="margin-bottom:0.2rem;font-size:1.8rem;letter-spacing:-0.02em"></h2>
+        <div id="gi-meta" style="font-size:0.85rem;color:var(--muted);margin-bottom:1.2rem;display:flex;gap:0.8rem;align-items:center"></div>
+        <div id="gi-desc" style="font-size:0.92rem;line-height:1.7;color:var(--text);margin-bottom:2rem;height:120px;overflow-y:auto;padding-right:0.5rem;scrollbar-width:thin"></div>
+        <div style="display:flex;gap:1rem">
+          <button class="primary" onclick="launchCurrentGame()" style="flex:1;height:48px;font-weight:700">🚀 Launch Now</button>
+          <button class="btn-small" id="gi-fav-btn" style="height:48px;width:48px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">☆</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Screenshot Lightbox ────────────── -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <img id="lightbox-img" src="" alt="Screenshot" />
+    <div class="lightbox-actions">
+      <button class="btn-small" id="lightbox-download">💾 Download</button>
+      <button class="btn-small danger" id="lightbox-delete">✕ Delete</button>
+    </div>
+  </div>
+
+  <!-- ── Master Admin Modal ──────────────── -->
+  <div class="modal-overlay" id="modal-admin">
+    <div class="modal" style="max-width:440px">
+      <button class="modal-close" data-close>&times;</button>
+      <h2>👑 Master Admin</h2>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 2rem;">Generate high-security, one-time-use PRO Access Codes.</p>
+
+      <div class="admin-code-box">
+        <div id="admin-gen-display-list" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem">
+          <div class="admin-code-text" style="font-size:1.4rem; opacity:0.3">-----</div>
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted); margin-bottom:0.4rem">
+            <span>Batch Size:</span>
+            <span id="admin-gen-count-val" style="color:var(--accent); font-weight:700">5</span>
+          </div>
+          <input type="range" id="admin-gen-count" min="1" max="100" value="5" style="width:100%; cursor:pointer">
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:1rem">
+          <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; background:rgba(255,255,255,0.05); padding:0.5rem; border-radius:4px; cursor:pointer">
+            <input type="radio" name="admin-gen-tier" value="pro" checked> PRO
+          </label>
+          <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; background:rgba(255,255,255,0.05); padding:0.5rem; border-radius:4px; cursor:pointer">
+            <input type="radio" name="admin-gen-tier" value="pro_plus"> PRO PLUS
+          </label>
+        </div>
+        <button class="primary" id="btn-admin-generate" style="width:100%">🎲 Generate 5 New Codes</button>
+      </div>
+
+      <div style="text-align:center; margin-bottom: 2rem; display:flex; flex-direction:column; gap:0.5rem">
+        <button class="btn-small ghost" id="btn-admin-copy" disabled>📋 Copy All to Clipboard</button>
+        <button class="btn-small danger" id="btn-admin-cleanup" style="background:transparent; opacity:0.6">🗑️ Clean Up Used Codes</button>
+      </div>
+
+      <hr style="border:0; border-top:1px solid var(--border); margin:1.5rem 0">
+
+      <h3 style="font-size:1rem; color:var(--text-bright); margin-bottom:0.5rem">👤 User Moderation</h3>
+      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:1rem">Suspend or permanently ban users by email.</p>
+      
+      <div class="admin-search-box" style="display:grid; grid-template-columns: 1fr auto; gap:0.5rem; margin-bottom:1rem">
+        <input type="email" id="admin-user-search" class="form-input" placeholder="User email..." style="height:38px">
+        <button class="btn-small accent" id="btn-admin-search" style="height:38px">🔍 Search</button>
+      </div>
+
+      <div id="admin-user-result" style="background:rgba(0,0,0,0.2); padding:1rem; border-radius:8px; border:1px solid var(--border); display:none; flex-direction:column; gap:1rem">
+        <!-- filled by JS -->
+      </div>
+
+      <div style="margin-top:2rem">
+        <h3 style="font-size:0.9rem; color:var(--text-bright); margin-bottom:0.8rem">📑 Recently Active</h3>
+        <div id="admin-recent-users" style="display:flex; flex-direction:column; gap:0.5rem">
+          <div style="font-size:0.75rem; color:var(--muted); opacity:0.5">Fetching users...</div>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem; font-size:0.75rem; color:var(--muted)">
+        Generated codes are instantly saved to your Firebase <b>promo_codes</b> collection.
+      </div>
+    </div>
+  </div>
+  <!-- ── Firebase Integration ────────────── -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+
+  <!-- ── Toast ──────────────────────────── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function () {
+      /* ═══════════════════════════════════════
+         Firebase Setup
+         ═══════════════════════════════════════ */
+      const firebaseConfig = {
+        apiKey: "AIzaSyCpl177y-x0g4S7OULzdTp2B97PVqmUfRw",
+        authDomain: "retro-web-d8b62.firebaseapp.com",
+        projectId: "retro-web-d8b62",
+        storageBucket: "retro-web-d8b62.firebasestorage.app",
+        messagingSenderId: "582451228066",
+        appId: "1:582451228066:web:a33e1b760f8037d16f96fb"
+      };
+      
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+      const storage = firebase.storage();
+      const ADMIN_UID = 'kUyrJmLo1QZiNwul68D1zw6OpYu2';
+
+      // We'll cache the active user object here so sync code can read it
+      var currentSessionUser = null;
+
+      function isAdminUser(user) {
+        return !!(user && user._id === ADMIN_UID);
+      }
+
+      function getAchievementCount(userLike) {
+        return Array.isArray(userLike && userLike.achievements) ? userLike.achievements.length : 0;
+      }
+
+      function buildLeaderboardEntry(userId, userLike) {
+        var stats = (userLike && userLike.stats) || defaultStats();
+        return {
+          uid: userId,
+          name: (userLike && userLike.name) || 'Anonymous Player',
+          avatar: (userLike && userLike.avatar) || null,
+          isPro: !!(userLike && userLike.isPro),
+          isProPlus: !!(userLike && userLike.isProPlus),
+          totalTimeMs: Number(stats.totalTimeMs || 0),
+          achievementsCount: getAchievementCount(userLike),
+          updatedAt: Date.now()
+        };
+      }
+
+      function randomPromoChunk(length) {
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        var out = '';
+        if (window.crypto && window.crypto.getRandomValues) {
+          var values = new Uint32Array(length);
+          window.crypto.getRandomValues(values);
+          for (var i = 0; i < length; i++) out += chars[values[i] % chars.length];
+          return out;
+        }
+        for (var j = 0; j < length; j++) out += chars[Math.floor(Math.random() * chars.length)];
+        return out;
+      }
+
+      async function createPromoCodeDoc(tier) {
+        var prefix = tier === 'pro_plus' ? 'RUPLUS' : 'RUPRO';
+        for (var attempt = 0; attempt < 5; attempt++) {
+          var finalCode = prefix + '-' + randomPromoChunk(4) + '-' + randomPromoChunk(4) + '-' + randomPromoChunk(4);
+          var ref = db.collection('promo_codes').doc(finalCode);
+          var existing = await ref.get();
+          if (existing.exists) continue;
+          await ref.set({
+            code: finalCode,
+            used: false,
+            createdAt: Date.now(),
+            type: 'master_gen',
+            tier: tier
+          });
+          return finalCode;
+        }
+        throw new Error('Could not generate a unique code. Try again.');
+      }
+
+      auth.onAuthStateChanged(async function(user) {
+        if (user) {
+          var cacheKey = 'rw_user_cache_' + user.uid;
+          var cached = localStorage.getItem(cacheKey);
+          
+          // Initial base info
+          var baseUser = { 
+            _id: user.uid, 
+            name: user.displayName || 'Player', 
+            email: user.email,
+            isAdmin: user.uid === ADMIN_UID,
+            isPro: false,
+            isProPlus: false,
+            history: [],
+            favorites: [],
+            stats: defaultStats(),
+            achievements: []
+          };
+
+          if (cached) {
+            try { currentSessionUser = Object.assign(baseUser, JSON.parse(cached)); } 
+            catch(e) { currentSessionUser = baseUser; }
+          } else {
+            currentSessionUser = baseUser;
+          }
+
+          // Fetch from Firestore
+          try {
+            var doc = await db.collection('users').doc(user.uid).get();
+            if (doc.exists) {
+              var data = doc.data();
+              
+              // ── MODERATION GUARD ─────────────────
+              var now = Date.now();
+              if (data.banStatus === 'banned') {
+                showToast('🛑 Account Permanently Banned.');
+                await doLogout();
+                alert('Account Permanently Banned: This registration has been restricted indefinitely.');
+                return;
+              } else if (data.banStatus === 'suspended' && data.banExpires > now) {
+                var d = new Date(data.banExpires);
+                var timestr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+                showToast('⏳ Account Suspended until ' + timestr);
+                await doLogout();
+                alert('Account Suspended: Access will be restored on ' + timestr + '.\nReason: ' + (data.banReason || 'Policy Violation'));
+                return;
+              }
+
+              // Normalize email from Firestore or Firebase Auth
+              var normalizedEmail = (data.email || user.email || '').toLowerCase();
+              currentSessionUser = Object.assign(currentSessionUser, data);
+              currentSessionUser.isAdmin = user.uid === ADMIN_UID;
+              currentSessionUser.email = normalizedEmail;
+              if (!currentSessionUser.name) currentSessionUser.name = user.displayName || 'Player';
+              
+              // ── SYNC REPAIR & TRACKING ──────────
+              var updates = {};
+              if (data.email !== normalizedEmail) updates.email = normalizedEmail;
+              updates.lastSeen = Date.now();
+              db.collection('users').doc(user.uid).update(updates).catch(() => {});
+              
+              localStorage.setItem(cacheKey, JSON.stringify(currentSessionUser));
+            } else {
+              // Create user record if missing (first login)
+              var newUser = Object.assign(baseUser, { 
+                email: (user.email || '').toLowerCase(),
+                created: Date.now(),
+                lastSeen: Date.now()
+              });
+              db.collection('users').doc(user.uid).set(newUser, { merge: true });
+              currentSessionUser = newUser;
+              localStorage.setItem(cacheKey, JSON.stringify(currentSessionUser));
+            }
+          } catch(e) {
+            console.warn('Firestore fetch error:', e.message);
+          }
+        } else {
+          currentSessionUser = null;
+        }
+        updateAuthUI();
+        renderFavorites();
+        updateChatUI();
+        if (document.getElementById('tab-library').classList.contains('active')) renderLibrary();
+        renderButtons(); // Force sidebar refresh
+      });
+
+      /* ═══════════════════════════════════════
+         Data Keys (localStorage fallbacks)
+         ═══════════════════════════════════════ */
+      var HISTORY_KEY = 'rw_history';
+      var FAVORITES_KEY = 'rw_favorites';
+      var SCREENSHOTS_KEY = 'rw_screenshots';
+      var STATS_KEY = 'rw_stats';
+      var EARNED_KEY = 'rw_earned';
+      
+      function isFavorite(systemId, romName) {
+        var favs = getFavorites();
+        return favs.some(f => f.romName === romName && f.systemId === systemId);
+      }
+      function isFavoriteByLabel(systemLabel, romName) {
+        var favs = getFavorites();
+        return favs.some(f => f.romName === romName && f.system === systemLabel);
+      }
+      function getMaxScreenshots() {
+        var user = currentUser();
+        return (user?.isPro || user?.isProPlus) ? 20 : 10;
+      }
+
+      function currentUser() {
+        return currentSessionUser;
+      }
+
+      async function doSignup(name, email, pw) {
+        name = (name || '').trim();
+        email = (email || '').toLowerCase().trim();
+        if (!name) return 'Enter a display name.';
+        if (!email || email.indexOf('@') < 1) return 'Enter a valid email.';
+        if (pw.length < 4) return 'Password must be at least 4 characters.';
+        
+        try {
+          var cred = await auth.createUserWithEmailAndPassword(email, pw);
+          var now = Date.now();
+          var newUserData = {
+            _id: cred.user.uid,
+            name: name,
+            email: email,
+            avatar: null,
+            created: now,
+            lastSeen: now,
+            isAdmin: cred.user.uid === ADMIN_UID,
+            isPro: false,
+            isProPlus: false,
+            history: [],
+            favorites: [],
+            stats: defaultStats(),
+            achievements: []
+          };
+          await db.collection('users').doc(cred.user.uid).set(newUserData, { merge: true });
+          currentSessionUser = newUserData;
+          return null;
+        } catch (e) {
+          return e.message;
+        }
+      }
+
+      async function doLogin(email, pw) {
+        email = (email || '').toLowerCase().trim();
+        try {
+          await auth.signInWithEmailAndPassword(email, pw);
+          return null;
+        } catch (e) {
+          return 'Invalid email or password.';
+        }
+      }
+
+      async function doLogout() {
+        await auth.signOut();
+      }
+
+      async function updateUser(fields) {
+        var user = currentUser();
+        if (!user) return;
+        
+        // Safety: Ensure we don't accidentally push undefined/null email
+        if (fields.email === undefined && currentSessionUser.email) {
+          // email is already in the object, we just don't need to push it in a partial update
+        }
+
+        Object.keys(fields).forEach(function (k) { currentSessionUser[k] = fields[k]; });
+        
+        // Cache locally 
+        var cacheKey = 'rw_user_cache_' + user._id;
+        localStorage.setItem(cacheKey, JSON.stringify(currentSessionUser));
+
+        // Sync to Firestore
+        try {
+          // Always use merge:true to prevent deleting fields like 'email' when updating others
+          await db.collection('users').doc(user._id).set(fields, { merge: true });
+        } catch(e) {
+          console.error('Failed to sync user data:', e);
+        }
+      }
+
+      async function deleteAccount() {
+        var user = currentUser();
+        if (!user || !auth.currentUser) return;
+        
+        try {
+          await db.collection('users').doc(user._id).delete();
+          await auth.currentUser.delete();
+          // onAuthStateChanged will handle the rest
+        } catch (e) {
+          alert('Could not delete account. You might need to log out and back in first to re-verify your identity.');
+        }
+      }
+
+      function addGameHistory(system, romName) {
+        var user = currentUser();
+        if (!user) return;
+        var hist = user.history || [];
+        hist.unshift({ system: system, rom: romName, time: Date.now() });
+        hist = hist.slice(0, 30);
+        updateUser({ history: hist });
+      }
+
+      function getGameHistory() {
+        var user = currentUser();
+        return user ? (user.history || []) : [];
+      }
+
+      /* ═══════════════════════════════════════
+         Favorites System
+         ═══════════════════════════════════════ */
+      function getFavorites() {
+        var user = currentUser();
+        return user ? (user.favorites || []) : [];
+      }
+      function saveFavorites(list) {
+        updateUser({ favorites: list });
+      }
+      function addFavorite(systemId, systemLabel, romName) {
+        var favs = getFavorites();
+        for (var i = 0; i < favs.length; i++) {
+          if (favs[i].romName === romName && favs[i].systemId === systemId) return;
+        }
+        if (favs.length >= 50) return;
+        favs.unshift({ systemId: systemId, system: systemLabel, romName: romName, addedAt: Date.now() });
+        saveFavorites(favs);
+        bumpFavStat();
+      }
+      function removeFavorite(systemId, romName) {
+        var favs = getFavorites();
+        favs = favs.filter(function (f) { return !(f.romName === romName && f.systemId === systemId); });
+        saveFavorites(favs);
+        bumpFavStat();
+      }
+      function isFavorite(systemId, romName) {
+        var favs = getFavorites();
+        for (var i = 0; i < favs.length; i++) {
+          if (favs[i].romName === romName && favs[i].systemId === systemId) return true;
+        }
+        return false;
+      }
+
+      /* ═══════════════════════════════════════
+         Screenshots System
+         ═══════════════════════════════════════ */
+      function getScreenshots() {
+        var user = currentUser();
+        if (!user) return [];
+        try {
+          var all = JSON.parse(localStorage.getItem(SCREENSHOTS_KEY)) || {};
+          return all[user._id] || [];
+        } catch (e) { return []; }
+      }
+      function saveScreenshotsList(list) {
+        var user = currentUser();
+        if (!user) return;
+        try {
+          var all = JSON.parse(localStorage.getItem(SCREENSHOTS_KEY)) || {};
+          all[user._id] = list;
+          localStorage.setItem(SCREENSHOTS_KEY, JSON.stringify(all));
+        } catch (e) { }
+      }
+      function saveScreenshot(dataUrl, system, romName) {
+        var list = getScreenshots();
+        var max = getMaxScreenshots();
+        list.unshift({ data: dataUrl, system: system, rom: romName, time: Date.now() });
+        if (list.length > max) {
+          list = list.slice(0, max);
+          showToast('⚠️ Max screenshots (' + max + ') reached!');
+        }
+        saveScreenshotsList(list);
+        bumpScreenshotStat();
+      }
+      function deleteScreenshot(index) {
+        var list = getScreenshots();
+        list.splice(index, 1);
+        saveScreenshotsList(list);
+      }
+      function downloadScreenshot(dataUrl, filename) {
+        var a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = filename || 'screenshot.jpg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      /* ═══════════════════════════════════════
+         Stats & Achievements System
+         ═══════════════════════════════════════ */
+      function defaultStats() {
+        return { totalSessions: 0, totalTimeMs: 0, uniqueGames: [], systemsUsed: [], screenshotsTaken: 0, favoriteCount: 0 };
+      }
+      function getStats() {
+        var user = currentUser();
+        if (!user) return defaultStats();
+        var s = user.stats || defaultStats();
+        if (!s.uniqueGames) s.uniqueGames = [];
+        if (!s.systemsUsed) s.systemsUsed = [];
+        return s;
+      }
+      function saveStats(stats) {
+        updateUser({ stats: stats });
+      }
+      function updateStatsOnLaunch(systemId, romName) {
+        if (!currentUser()) return;
+        var stats = getStats();
+        stats.totalSessions++;
+        var gameKey = systemId + ':' + romName;
+        if (stats.uniqueGames.indexOf(gameKey) === -1) stats.uniqueGames.push(gameKey);
+        if (stats.systemsUsed.indexOf(systemId) === -1) stats.systemsUsed.push(systemId);
+        saveStats(stats);
+        checkAndNotifyAchievements();
+      }
+      function bumpScreenshotStat() {
+        if (!currentUser()) return;
+        var stats = getStats();
+        stats.screenshotsTaken = getScreenshots().length > stats.screenshotsTaken ? getScreenshots().length : stats.screenshotsTaken + 1;
+        stats.screenshotsTaken = Math.max(stats.screenshotsTaken, getScreenshots().length);
+        saveStats(stats);
+        checkAndNotifyAchievements();
+      }
+      function bumpFavStat() {
+        if (!currentUser()) return;
+        var stats = getStats();
+        stats.favoriteCount = getFavorites().length;
+        saveStats(stats);
+        checkAndNotifyAchievements();
+      }
+      function formatPlayTime(ms) {
+        var sec = Math.floor(ms / 1000);
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        if (h > 0) return h + 'h ' + m + 'm';
+        return m + 'm';
+      }
+
+      function getEarnedAchievements() {
+        var user = currentUser();
+        return user ? (user.achievements || []) : [];
+      }
+      function saveEarnedAchievements(earned) {
+        updateUser({ achievements: earned });
+      }
+
+      /* ═══════════════════════════════════════
+         Toast
+         ═══════════════════════════════════════ */
+      function showToast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._tid);
+        t._tid = setTimeout(function () { t.classList.remove('show'); }, 4000);
+      }
+
+      /* ═══════════════════════════════════════
+         Avatar helpers
+         ═══════════════════════════════════════ */
+      function avatarInitial(name) {
+        return (name || '?').charAt(0).toUpperCase();
+      }
+
+      function isLocalPreview() {
+        return window.location.protocol === 'file:';
+      }
+
+      function appMessageOrigin() {
+        return isLocalPreview() ? '*' : window.location.origin;
+      }
+
+      function isTrustedAppOrigin(origin) {
+        return isLocalPreview() ? origin === 'null' : origin === window.location.origin;
+      }
+
+      function safeAvatarUrl(value, fallback) {
+        if (typeof value !== 'string') return fallback;
+        var trimmed = value.trim();
+        if (!trimmed) return fallback;
+        if (/^data:image\//i.test(trimmed)) return trimmed;
+        try {
+          var parsed = new URL(trimmed, window.location.href);
+          if (/^(https?:|blob:)$/.test(parsed.protocol)) return parsed.href;
+        } catch (e) {}
+        return fallback;
+      }
+
+      function renderAvatarInto(el, user) {
+        el.innerHTML = '';
+        var avatarUrl = safeAvatarUrl(user && user.avatar, '');
+        if (avatarUrl) {
+          var img = document.createElement('img');
+          img.src = avatarUrl;
+          img.alt = user.name;
+          el.appendChild(img);
+        } else {
+          el.textContent = avatarInitial(user.name);
+        }
+      }
+
+      function resizeImage(file, maxSize, cb) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var img = new Image();
+          img.onload = function () {
+            var w = img.width, h = img.height;
+            if (w > maxSize || h > maxSize) {
+              if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+              else { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+            var c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            cb(c.toDataURL('image/jpeg', 0.8));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      /* ═══════════════════════════════════════
+         Modal helpers
+         ═══════════════════════════════════════ */
+      function openModal(id) {
+        document.getElementById(id).classList.add('open');
+      }
+      window.openModal = openModal;
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+      }
+      window.closeModal = closeModal;
+      function closeAllModals() {
+        document.querySelectorAll('.modal-overlay').forEach(function (m) {
+          m.classList.remove('open');
+        });
+      }
+
+      // close on overlay click or close button
+      document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) closeAllModals();
+        });
+        overlay.querySelectorAll('[data-close]').forEach(function (btn) {
+          btn.addEventListener('click', function () { closeAllModals(); });
+        });
+      });
+
+      /* ═══════════════════════════════════════
+         Auth UI
+         ═══════════════════════════════════════ */
+      var authArea = document.getElementById('auth-area');
+      var dropdown = null;
+
+      function updateAuthUI() {
+        authArea.innerHTML = '';
+        var user = currentUser();
+
+        if (!user) {
+          var loginBtn = document.createElement('button');
+          loginBtn.className = 'btn-auth';
+          loginBtn.textContent = 'Log in';
+          loginBtn.addEventListener('click', function () { openModal('modal-login'); });
+
+          var signupBtn = document.createElement('button');
+          signupBtn.className = 'btn-auth accent';
+          signupBtn.textContent = 'Sign up';
+          signupBtn.addEventListener('click', function () { openModal('modal-signup'); });
+
+          authArea.appendChild(loginBtn);
+          authArea.appendChild(signupBtn);
+          return;
+        }
+
+        // logged in: avatar + dropdown
+        var wrap = document.createElement('div');
+        wrap.className = 'avatar-wrap';
+
+        var btn = document.createElement('button');
+        btn.className = 'avatar-btn';
+        btn.title = user.name;
+        renderAvatarInto(btn, user);
+
+        var dd = document.createElement('div');
+        dd.className = 'dropdown';
+
+        var nameItem = document.createElement('div');
+        nameItem.className = 'dropdown-item';
+        nameItem.style.fontWeight = '600';
+        nameItem.style.color = 'var(--text-bright)';
+        nameItem.style.cursor = 'default';
+        nameItem.textContent = user.name;
+        if (user.isProPlus || user.isPro) {
+          var pb = document.createElement('span');
+          pb.className = 'badge-pro';
+          pb.textContent = user.isProPlus ? 'PRO+' : 'PRO';
+          nameItem.appendChild(pb);
+        }
+
+        var emailItem = document.createElement('div');
+        emailItem.className = 'dropdown-item';
+        emailItem.style.fontSize = '0.75rem';
+        emailItem.style.color = 'var(--muted)';
+        emailItem.style.cursor = 'default';
+        emailItem.style.paddingTop = '0';
+        emailItem.textContent = user.email;
+
+        var sep = document.createElement('div');
+        sep.className = 'dropdown-sep';
+
+        var profileItem = document.createElement('button');
+        profileItem.className = 'dropdown-item';
+        profileItem.textContent = 'Profile & Settings';
+        profileItem.addEventListener('click', function () {
+          dd.classList.remove('open');
+          openProfileModal();
+        });
+
+        var sep2 = document.createElement('div');
+        sep2.className = 'dropdown-sep';
+
+        var logoutItem = document.createElement('button');
+        logoutItem.className = 'dropdown-item danger';
+        logoutItem.textContent = 'Log out';
+        logoutItem.addEventListener('click', function () {
+          doLogout();
+          dd.classList.remove('open');
+          updateAuthUI();
+        });
+
+        dd.appendChild(nameItem);
+        dd.appendChild(emailItem);
+        dd.appendChild(sep);
+        dd.appendChild(profileItem);
+        dd.appendChild(sep2);
+        dd.appendChild(logoutItem);
+
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          dd.classList.toggle('open');
+        });
+
+        wrap.appendChild(btn);
+        
+        if (user.isProPlus || user.isPro) {
+          var pb = document.createElement('span');
+          pb.className = 'badge-pro header-pro-tag';
+          pb.textContent = user.isProPlus ? 'PRO+' : 'PRO';
+          wrap.appendChild(pb);
+        }
+
+        wrap.appendChild(dd);
+        authArea.appendChild(wrap);
+        dropdown = dd;
+        renderButtons(); // Refresh system locks
+        renderThemeDropdown(); // Refresh theme locks
+        renderProPage(); // Refresh checkout buttons
+        updateAdsVisibility(); // Refresh ads
+      }
+
+      function updateAdsVisibility() {
+        var user = currentUser();
+        var isPro = user && user.isPro;
+        var ads = document.querySelectorAll('.ad-target');
+        
+        ads.forEach(function(ad) {
+          if (isPro) {
+            ad.classList.remove('visible');
+          } else {
+            ad.classList.add('visible');
+          }
+        });
+      }
+
+      // close dropdown on outside click
+      document.addEventListener('click', function () {
+        if (dropdown) dropdown.classList.remove('open');
+      });
+
+      /* ═══════════════════════════════════════
+         Login form
+         ═══════════════════════════════════════ */
+      document.getElementById('login-submit').addEventListener('click', async function () {
+        var email = document.getElementById('login-email').value;
+        var pw = document.getElementById('login-pass').value;
+        var err = await doLogin(email, pw);
+        if (err) {
+          document.getElementById('login-error').textContent = err;
+        } else {
+          document.getElementById('login-error').textContent = '';
+          document.getElementById('login-email').value = '';
+          document.getElementById('login-pass').value = '';
+          closeModal('modal-login');
+          // updateAuthUI is automatically called by onAuthStateChanged!
+        }
+      });
+
+      // enter key support
+      document.getElementById('login-pass').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('login-submit').click();
+      });
+
+      /* ═══════════════════════════════════════
+         Signup form
+         ═══════════════════════════════════════ */
+      document.getElementById('signup-submit').addEventListener('click', async function () {
+        var name = document.getElementById('signup-name').value;
+        var email = document.getElementById('signup-email').value;
+        var pw = document.getElementById('signup-pass').value;
+        var pw2 = document.getElementById('signup-pass2').value;
+        if (pw !== pw2) {
+          document.getElementById('signup-error').textContent = 'Passwords do not match.';
+          return;
+        }
+        var err = await doSignup(name, email, pw);
+        if (err) {
+          document.getElementById('signup-error').textContent = err;
+        } else {
+          document.getElementById('signup-error').textContent = '';
+          document.getElementById('signup-name').value = '';
+          document.getElementById('signup-email').value = '';
+          document.getElementById('signup-pass').value = '';
+          document.getElementById('signup-pass2').value = '';
+          closeModal('modal-signup');
+          // updateAuthUI is automatically called by onAuthStateChanged!
+        }
+      });
+
+      document.getElementById('signup-pass2').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('signup-submit').click();
+      });
+
+      // switch links
+      document.getElementById('switch-to-signup').addEventListener('click', function () {
+        closeModal('modal-login');
+        openModal('modal-signup');
+      });
+      document.getElementById('switch-to-login').addEventListener('click', function () {
+        closeModal('modal-signup');
+        openModal('modal-login');
+      });
+
+      /* ═══════════════════════════════════════
+         Profile modal
+         ═══════════════════════════════════════ */
+      var avatarUpload = document.getElementById('avatar-upload');
+
+      function openProfileModal() {
+        var user = currentUser();
+        if (!user) return;
+
+        renderAvatarInto(document.getElementById('profile-avatar'), user);
+        document.getElementById('profile-display-name').textContent = user.name;
+        document.getElementById('profile-email').textContent = user.email;
+        document.getElementById('edit-name').value = user.name;
+
+        // render stats
+        renderStatsGrid();
+        // render achievements
+        renderAchievementsList();
+        // render screenshots
+        renderScreenshotGallery();
+
+        // render history with fav toggle
+        var histEl = document.getElementById('game-history');
+        var hist = getGameHistory();
+        histEl.innerHTML = '';
+        if (hist.length === 0) {
+          histEl.innerHTML = '<li class="history-empty">No games played yet.</li>';
+        } else {
+          hist.slice(0, 15).forEach(function (item) {
+            var li = document.createElement('li');
+            var nameSpan = document.createElement('span');
+            nameSpan.textContent = item.rom + ' (' + item.system + ')';
+            var rightWrap = document.createElement('span');
+            rightWrap.style.cssText = 'display:flex;align-items:center;gap:0.5rem;';
+            // find systemId
+            var histSysId = null;
+            Object.keys(SYSTEMS).forEach(function (sid) {
+              if (SYSTEMS[sid].label === item.system) histSysId = sid;
+            });
+            if (histSysId) {
+              var starBtn = document.createElement('button');
+              starBtn.className = 'fav-toggle-sm' + (isFavorite(histSysId, item.rom) ? ' active' : '');
+              starBtn.textContent = isFavorite(histSysId, item.rom) ? '\u2605' : '\u2606';
+              (function (sid, sys, rom, btn) {
+                btn.addEventListener('click', function () {
+                  if (isFavorite(sid, rom)) {
+                    removeFavorite(sid, rom);
+                    btn.textContent = '\u2606'; btn.classList.remove('active');
+                  } else {
+                    addFavorite(sid, sys, rom);
+                    btn.textContent = '\u2605'; btn.classList.add('active');
+                  }
+                  renderFavorites();
+                });
+              })(histSysId, item.system, item.rom, starBtn);
+              rightWrap.appendChild(starBtn);
+            }
+            var dateSpan = document.createElement('span');
+            dateSpan.className = 'h-date';
+            dateSpan.textContent = new Date(item.time).toLocaleDateString();
+            rightWrap.appendChild(dateSpan);
+            li.appendChild(nameSpan);
+            li.appendChild(rightWrap);
+            histEl.appendChild(li);
+          });
+        }
+
+        // reset pw area
+        document.getElementById('pw-change-area').hidden = true;
+        document.getElementById('pw-old').value = '';
+        document.getElementById('pw-new').value = '';
+        document.getElementById('pw-error').textContent = '';
+
+        openModal('modal-profile');
+      }
+
+      // avatar click
+      document.getElementById('profile-avatar').addEventListener('click', function () {
+        avatarUpload.click();
+      });
+
+      avatarUpload.addEventListener('change', function () {
+        var f = avatarUpload.files[0];
+        if (!f) return;
+        resizeImage(f, 128, function (dataUrl) {
+          updateUser({ avatar: dataUrl });
+          renderAvatarInto(document.getElementById('profile-avatar'), currentUser());
+          updateAuthUI();
+        });
+        avatarUpload.value = '';
+      });
+
+      // save profile name
+      document.getElementById('save-profile').addEventListener('click', function () {
+        var newName = document.getElementById('edit-name').value.trim();
+        if (!newName) return;
+        updateUser({ name: newName });
+        document.getElementById('profile-display-name').textContent = newName;
+        updateAuthUI();
+      });
+
+      // change password toggle
+      document.getElementById('change-pw-toggle').addEventListener('click', function () {
+        var area = document.getElementById('pw-change-area');
+        area.hidden = !area.hidden;
+      });
+
+      // save new password
+      document.getElementById('pw-save').addEventListener('click', async function () {
+        var user = currentUser();
+        if (!user || !auth.currentUser) return;
+        var old = document.getElementById('pw-old').value;
+        var newPw = document.getElementById('pw-new').value;
+        var errEl = document.getElementById('pw-error');
+
+        if (newPw.length < 4) {
+          errEl.textContent = 'New password must be at least 4 characters.';
+          return;
+        }
+
+        try {
+          var cred = firebase.auth.EmailAuthProvider.credential(user.email, old);
+          await auth.currentUser.reauthenticateWithCredential(cred);
+          await auth.currentUser.updatePassword(newPw);
+          errEl.textContent = '';
+          document.getElementById('pw-change-area').hidden = true;
+          document.getElementById('pw-old').value = '';
+          document.getElementById('pw-new').value = '';
+          alert('Password updated successfully.');
+        } catch (e) {
+          errEl.textContent = 'Could not update password. Check your current password.';
+        }
+      });
+
+      // delete account
+      document.getElementById('delete-account').addEventListener('click', async function () {
+        if (!confirm('Are you sure? This will delete your account and game history. Save data in the browser won\'t be affected.')) return;
+        await deleteAccount();
+        closeModal('modal-profile');
+      });
+
+      /* ═══════════════════════════════════════
+         Emulator systems (original logic)
+         ═══════════════════════════════════════ */
+      var SYSTEMS = {
+        nes: {
+          group: 'nintendo',
+          label: 'NES / Famicom',
+          core: 'nes',
+          ext: '.nes .fds .unf .zip',
+          hint: 'FDS games may need disksys.rom as BIOS in advanced builds; ZIP supported.',
+          bios: false,
+        },
+        snes: {
+          group: 'nintendo',
+          label: 'SNES',
+          core: 'snes',
+          ext: '.smc .sfc .fig .zip',
+          hint: 'Most common formats: .sfc, .smc.',
+          bios: false,
+        },
+        n64: {
+          group: 'nintendo',
+          label: 'Nintendo 64',
+          core: 'n64',
+          ext: '.n64 .z64 .v64 .zip',
+          hint: 'Byte-swapped dumps work; performance varies by title.',
+          bios: false,
+        },
+        gb: {
+          group: 'nintendo',
+          label: 'Game Boy / Color',
+          core: 'gb',
+          ext: '.gb .gbc .zip',
+          hint: 'Supports original Game Boy and Game Boy Color ROMs.',
+          bios: false,
+        },
+        gba: {
+          group: 'nintendo',
+          label: 'Game Boy Advance',
+          core: 'gba',
+          ext: '.gba .zip',
+          hint: 'Optional GBA BIOS improves compatibility but most games run without it.',
+          bios: true,
+          biosLabel: 'GBA BIOS (optional)',
+        },
+        psx: {
+          group: 'sony',
+          label: 'PlayStation (PS1)',
+          core: 'psx',
+          ext: '.bin .cue .pbp .chd .iso .zip',
+          hint: 'Many games run without a BIOS; for best compatibility add a legal PS1 BIOS file below.',
+          bios: true,
+          biosLabel: 'PS1 BIOS (optional)',
+        },
+        psp: {
+          group: 'sony',
+          label: 'PSP (PRO PLUS)',
+          core: 'psp',
+          ext: '.iso .cso .pbp .zip',
+          hint: 'Performance varies by game. A decent computer is recommended for PSP emulation.',
+          bios: false,
+          isProPlus: true,
+        },
+        segaMD: {
+          group: 'sega',
+          label: 'Genesis / Mega Drive',
+          core: 'segaMD',
+          ext: '.md .gen .smd .bin .zip',
+          hint: 'TMSS BIOS rarely required; most ROMs run directly.',
+          bios: false,
+        },
+        segaGG: {
+          group: 'sega',
+          label: 'Game Gear',
+          core: 'segaGG',
+          ext: '.gg .zip',
+          hint: 'Sega Game Gear ROMs. Most games run directly without any BIOS.',
+          bios: false,
+        },
+        segaSaturn: {
+          group: 'sega',
+          label: 'Saturn',
+          core: 'segaSaturn',
+          ext: '.cue .chd .iso .zip',
+          hint: 'A decent computer is recommended for Saturn emulation. A valid saturn_bios.bin often helps compatibility.',
+          bios: true,
+          biosLabel: 'Saturn BIOS (recommended)',
+          isPro: true,
+        },
+        nds: {
+          group: 'nintendo',
+          label: 'Nintendo DS (BETA)',
+          core: 'nds',
+          ext: '.nds .zip',
+          hint: 'Experimental dual-screen emulation. Use your mouse to interact with the bottom touch screen.',
+          bios: false,
+          isPro: true,
+        },
+      };
+
+      /* ═══════════════════════════════════════
+         Achievements definitions
+         ═══════════════════════════════════════ */
+      var ACHIEVEMENTS = [
+        {
+          id: 'first_steps', name: 'First Steps', desc: 'Launch your first game', icon: '🎮',
+          check: function (s) { return s.totalSessions >= 1; }, prog: function (s) { return [Math.min(s.totalSessions, 1), 1]; }
+        },
+        {
+          id: 'decade', name: 'Decade of Games', desc: 'Play 10 different games', icon: '🔟',
+          check: function (s) { return s.uniqueGames.length >= 10; }, prog: function (s) { return [Math.min(s.uniqueGames.length, 10), 10]; }
+        },
+        {
+          id: 'hour_one', name: 'Hour One', desc: 'Accumulate 1 hour of play time', icon: '🕐',
+          check: function (s) { return s.totalTimeMs >= 3600000; }, prog: function (s) { return [Math.min(Math.floor(s.totalTimeMs / 60000), 60), 60]; }
+        },
+        {
+          id: 'marathon', name: 'Marathon', desc: 'Accumulate 5 hours of play time', icon: '⏱️',
+          check: function (s) { return s.totalTimeMs >= 18000000; }, prog: function (s) { return [Math.min(Math.floor(s.totalTimeMs / 60000), 300), 300]; }
+        },
+        {
+          id: 'collector', name: 'Collector', desc: 'Add 5 games to favorites', icon: '🌟',
+          check: function (s) { return s.favoriteCount >= 5; }, prog: function (s) { return [Math.min(s.favoriteCount, 5), 5]; }
+        },
+        {
+          id: 'shutterbug', name: 'Shutterbug', desc: 'Take your first screenshot', icon: '📸',
+          check: function (s) { return s.screenshotsTaken >= 1; }, prog: function (s) { return [Math.min(s.screenshotsTaken, 1), 1]; }
+        },
+        {
+          id: 'photographer', name: 'Photographer', desc: 'Take 10 screenshots', icon: '📷',
+          check: function (s) { return s.screenshotsTaken >= 10; }, prog: function (s) { return [Math.min(s.screenshotsTaken, 10), 10]; }
+        },
+        {
+          id: 'explorer', name: 'Explorer', desc: 'Try 3 different systems', icon: '🎯',
+          check: function (s) { return s.systemsUsed.length >= 3; }, prog: function (s) { return [Math.min(s.systemsUsed.length, 3), 3]; }
+        },
+        {
+          id: 'world_traveler', name: 'World Traveler', desc: 'Try every available system', icon: '🗺️',
+          check: function (s) { return s.systemsUsed.length >= Object.keys(SYSTEMS).length; }, prog: function (s) { return [s.systemsUsed.length, Object.keys(SYSTEMS).length]; }
+        },
+        {
+          id: 'dedicated', name: 'Dedicated', desc: 'Play 25 different games', icon: '⭐',
+          check: function (s) { return s.uniqueGames.length >= 25; }, prog: function (s) { return [Math.min(s.uniqueGames.length, 25), 25]; }
+        },
+      ];
+
+      function checkAndNotifyAchievements() {
+        if (!currentUser()) return;
+        var stats = getStats();
+        var earned = getEarnedAchievements();
+        ACHIEVEMENTS.forEach(function (ach) {
+          if (earned.indexOf(ach.id) === -1 && ach.check(stats)) {
+            earned.push(ach.id);
+            showToast(ach.icon + ' Achievement Unlocked: ' + ach.name);
+          }
+        });
+        saveEarnedAchievements(earned);
+      }
+
+      /* ═══════════════════════════════════════
+         UI Rendering: Stats, Achievements, Screenshots, Favorites
+         ═══════════════════════════════════════ */
+      function renderStatsGrid() {
+        var grid = document.getElementById('stats-grid');
+        var stats = getStats();
+        grid.innerHTML = '';
+        [{ v: stats.totalSessions, l: 'Sessions' }, { v: formatPlayTime(stats.totalTimeMs), l: 'Play Time' },
+        { v: stats.uniqueGames.length, l: 'Unique Games' }, { v: stats.systemsUsed.length, l: 'Systems Used' }].forEach(function (item) {
+          var c = document.createElement('div'); c.className = 'stat-card';
+          var val = document.createElement('div'); val.className = 'stat-value'; val.textContent = item.v;
+          var lbl = document.createElement('div'); lbl.className = 'stat-label'; lbl.textContent = item.l;
+          c.appendChild(val); c.appendChild(lbl); grid.appendChild(c);
+        });
+      }
+
+      function renderAchievementsList() {
+        var list = document.getElementById('achievements-list');
+        var stats = getStats(); var earned = getEarnedAchievements();
+        list.innerHTML = '';
+        ACHIEVEMENTS.forEach(function (ach) {
+          var ok = earned.indexOf(ach.id) !== -1;
+          var div = document.createElement('div');
+          div.className = 'achievement ' + (ok ? 'unlocked' : 'locked');
+          var icon = document.createElement('span'); icon.className = 'ach-icon'; icon.textContent = ach.icon;
+          var info = document.createElement('div'); info.className = 'ach-info';
+          var nm = document.createElement('div'); nm.className = 'ach-name'; nm.textContent = ach.name;
+          var ds = document.createElement('div'); ds.className = 'ach-desc'; ds.textContent = ach.desc;
+          info.appendChild(nm); info.appendChild(ds);
+          if (!ok) {
+            var p = ach.prog(stats);
+            var bar = document.createElement('div'); bar.className = 'progress-bar';
+            var fill = document.createElement('div'); fill.className = 'progress-fill';
+            fill.style.width = Math.round((p[0] / p[1]) * 100) + '%';
+            bar.appendChild(fill); info.appendChild(bar);
+          }
+          div.appendChild(icon); div.appendChild(info);
+          if (ok) { var ck = document.createElement('span'); ck.className = 'ach-check'; ck.textContent = '✓'; div.appendChild(ck); }
+          list.appendChild(div);
+        });
+      }
+
+      function renderScreenshotGallery() {
+        var gallery = document.getElementById('screenshot-gallery');
+        var countEl = document.getElementById('ss-count');
+        var ss = getScreenshots();
+        var max = getMaxScreenshots();
+        if (countEl) countEl.textContent = '(' + ss.length + '/' + max + ')';
+        gallery.innerHTML = '';
+        if (ss.length === 0) { gallery.innerHTML = '<p class="ss-empty">No screenshots yet. Use the 📷 button while playing.</p>'; return; }
+        ss.forEach(function (s, i) {
+          var t = document.createElement('div'); t.className = 'screenshot-thumb';
+          var img = document.createElement('img'); img.src = s.data; img.alt = s.rom;
+          var meta = document.createElement('div'); meta.className = 'ss-meta'; meta.textContent = s.rom;
+          var ov = document.createElement('div'); ov.className = 'ss-overlay';
+          var vb = document.createElement('button'); vb.className = 'btn-small'; vb.textContent = 'View';
+          vb.addEventListener('click', function (e) { e.stopPropagation(); openLightbox(i); });
+          var db = document.createElement('button'); db.className = 'btn-small'; db.textContent = '💾'; db.title = 'Download';
+          db.addEventListener('click', function (e) { e.stopPropagation(); downloadScreenshot(s.data, s.rom + '_' + s.system + '.jpg'); });
+          var xb = document.createElement('button'); xb.className = 'btn-small danger'; xb.textContent = '✕';
+          xb.addEventListener('click', function (e) { e.stopPropagation(); deleteScreenshot(i); renderScreenshotGallery(); });
+          ov.appendChild(vb); ov.appendChild(db); ov.appendChild(xb);
+          t.appendChild(img); t.appendChild(meta); t.appendChild(ov);
+          t.addEventListener('click', function () { openLightbox(i); });
+          gallery.appendChild(t);
+        });
+      }
+
+      var lightboxIndex = 0;
+      function openLightbox(i) {
+        lightboxIndex = i;
+        var ss = getScreenshots(); if (i >= ss.length) return;
+        document.getElementById('lightbox-img').src = ss[i].data;
+        document.getElementById('lightbox').classList.add('open');
+      }
+      function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+      function renderFavorites() {
+        var section = document.getElementById('favorites-section');
+        var list = document.getElementById('sidebar-favs');
+        if (!currentUser()) { section.hidden = true; return; }
+        var favs = getFavorites();
+        if (favs.length === 0) { section.hidden = true; return; }
+        section.hidden = false;
+        list.innerHTML = '';
+        favs.forEach(function (fav) {
+          var item = document.createElement('div'); item.className = 'fav-item';
+          item.style.cursor = 'pointer';
+          var nm = document.createElement('span'); nm.className = 'fav-name'; nm.textContent = fav.romName; nm.title = fav.romName;
+          var rm = document.createElement('button'); rm.className = 'fav-remove'; rm.textContent = '✕'; rm.title = 'Remove';
+          rm.addEventListener('click', function (e) { e.stopPropagation(); removeFavorite(fav.systemId, fav.romName); renderFavorites(); });
+          item.appendChild(nm); item.appendChild(rm);
+          item.addEventListener('click', function() {
+            selectSystem(fav.systemId);
+            // We can't easily auto-launch local files from path alone without user re-selecting, 
+            // but we can jump to the system tab for them.
+            switchTab('play');
+          });
+          list.appendChild(item);
+        });
+      }
+
+      function updateFavButton() {
+        var btn = document.getElementById('btn-fav');
+        if (!selectedId || !romInput.files[0]) { btn.textContent = '☆'; btn.classList.remove('active'); return; }
+        var rn = romInput.files[0].name.replace(/\.[^.]+$/, '');
+        if (isFavorite(selectedId, rn)) { btn.textContent = '★'; btn.classList.add('active'); }
+        else { btn.textContent = '☆'; btn.classList.remove('active'); }
+      }
+
+      /* ═══════════════════════════════════════
+         Play time tracker
+         ═══════════════════════════════════════ */
+      var playTimer = null;
+      function startPlayTimer() {
+        stopPlayTimer();
+        playTimer = setInterval(function () {
+          if (!currentUser() || frame.hidden) { stopPlayTimer(); return; }
+          var stats = getStats(); stats.totalTimeMs += 30000; saveStats(stats);
+          checkAndNotifyAchievements();
+        }, 30000);
+      }
+      function stopPlayTimer() { if (playTimer) { clearInterval(playTimer); playTimer = null; } }
+
+      var selectedId = null;
+      var netplayUrl = '';
+      var frame = document.getElementById('emu-frame');
+      var placeholder = document.getElementById('viewer-placeholder');
+      var launchPanel = document.getElementById('launch-panel');
+      var romInput = document.getElementById('rom-file');
+      var biosWrap = document.getElementById('bios-wrap');
+      var biosInput = document.getElementById('bios-file');
+      var biosLabel = document.getElementById('bios-label');
+      var currentRomName = '';
+      var btnLaunch = document.getElementById('btn-launch');
+
+      function openPlayerAndPost(payload, transfer) {
+        frame.hidden = false;
+        placeholder.classList.add('hidden');
+        frame.src = 'player.html?t=' + Date.now();
+        frame.onload = function () {
+          frame.onload = null;
+          frame.contentWindow.postMessage(
+            payload,
+            appMessageOrigin(),
+            transfer || []
+          );
+        };
+      }
+
+      /* cache for game posters */
+      var POSTER_CACHE = {};
+
+      async function getGamePoster(name, system) {
+        var key = (name + '|' + system).toLowerCase();
+        if (POSTER_CACHE[key]) return POSTER_CACHE[key];
+
+        try {
+          var query = encodeURIComponent(name + ' ' + (system || ''));
+          var res = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${query}&page_size=1`);
+          var data = await res.json();
+          if (data.results && data.results.length > 0) {
+            var url = data.results[0].background_image;
+            POSTER_CACHE[key] = url;
+            return url;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function renderLibrary() {
+        var el = document.getElementById('library-grid');
+        if (!el) return;
+        
+        var favorites = getFavorites();
+        
+        el.innerHTML = '';
+        if (favorites.length === 0) {
+          el.innerHTML = '<div class="page-empty">Your Library is empty. Star a game to see it here!</div>';
+          return;
+        }
+
+        // Sort by most recently added
+        var sorted = [...favorites].sort((a,b) => (b.addedAt || 0) - (a.addedAt || 0));
+
+        sorted.forEach(function (g) {
+          var item = document.createElement('div');
+          item.className = 'library-item';
+          item.innerHTML = `
+            <div class="li-name">★ ${g.romName}</div>
+            <button class="fav-remove" title="Remove from Library">✕</button>
+          `;
+          
+          item.querySelector('.fav-remove').addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeFavorite(g.systemId, g.romName);
+            renderLibrary();
+            renderFavorites();
+            showToast('Removed from Library: ' + g.romName);
+          });
+
+          item.addEventListener('click', function () {
+            selectSystem(g.systemId);
+            switchTab('play');
+            showToast('System selected: ' + g.system + '. Please re-select ROM to play.');
+          });
+          el.appendChild(item);
+        });
+      }
+
+      function isFavoriteByLabel(systemLabel, romName) {
+        var favs = getFavorites();
+        return favs.some(f => f.romName === romName && f.system === systemLabel);
+      }
+
+      function switchTab(tabId) {
+        document.querySelectorAll('.tab-panel').forEach(function (p) {
+          p.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        var panel = document.getElementById('tab-' + tabId);
+        if (panel) panel.classList.add('active');
+        var btn = document.querySelector('.tab-btn[data-tab="' + tabId + '"]');
+        if (btn) btn.classList.add('active');
+        // render tab content on switch
+        if (tabId === 'library') renderLibrary();
+        if (tabId === 'stats') renderStatsPage();
+        if (tabId === 'screenshots') renderScreenshotsPage();
+        if (tabId === 'pro') renderProPage();
+      }
+      window.switchTab = switchTab;
+
+      function renderButtons() {
+        var groups = { nintendo: [], sony: [], sega: [] };
+        Object.keys(SYSTEMS).forEach(function (id) {
+          var s = SYSTEMS[id];
+          groups[s.group].push({ id: id, s: s });
+        });
+        ['nintendo', 'sony', 'sega'].forEach(function (g) {
+          var el = document.getElementById('list-' + g);
+          el.innerHTML = '';
+          groups[g].forEach(function (item) {
+            var s = item.s;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'sys-btn';
+            
+            var user = currentUser();
+            var locked = (s.isPro && !user?.isPro && !user?.isProPlus) || 
+                         (s.isProPlus && !user?.isProPlus);
+            
+            if (locked) btn.classList.add('locked');
+            // (V4.0.6) STANDALONE TEMPLATE RENDER
+            var user = currentUser();
+            var leftHtml = `<span>${s.label}</span>`;
+            var rightHtml = '';
+
+            // PSP: All badges on the RIGHT
+            if (s.isProPlus && !user?.isProPlus) {
+              rightHtml += `<span style="font-size:0.55rem; background:var(--accent); color:white; font-weight:900; padding:1px 4px; border-radius:3px;">PRO</span>`;
+              rightHtml += ` <span style="font-size:0.55rem; background:var(--accent1); color:black; font-weight:900; padding:1px 4px; border-radius:3px;">PRO PLUS</span>`;
+            } 
+            // DS/Saturn: Badge on the LEFT
+            else if (s.isPro && !user?.isPro && !user?.isProPlus) {
+              leftHtml += ` <span style="font-size:0.55rem; background:var(--accent); color:white; font-weight:900; padding:1px 4px; border-radius:3px;">PRO</span>`;
+            }
+
+            // Always add Web tag to the RIGHT
+            rightHtml += ` <span class="tag tag-${g}">Web</span>`;
+
+            // Final Push to DOM
+            btn.innerHTML = `
+              <div style="display:flex; align-items:center; gap:0.4rem;">${leftHtml}</div>
+              <div style="display:flex; align-items:center; gap:0.3rem;">${rightHtml}</div>
+            `;
+            
+            btn.addEventListener('click', function () { selectSystem(item.id); });
+            el.appendChild(btn);
+          });
+        });
+      }
+
+      function selectSystem(id) {
+        var s = SYSTEMS[id];
+        var user = currentUser();
+        
+        if (s.isProPlus && !user?.isProPlus) {
+            showToast('⭐ Unlock ' + s.label + ' with RetroUniverse PRO PLUS!');
+          selectTier('pro_plus');
+          switchTab('pro');
+          return;
+        }
+        
+        if (s.isPro && !user?.isPro && !user?.isProPlus) {
+            showToast('⭐ Unlock ' + s.label + ' with RetroUniverse PRO!');
+          selectTier('pro');
+          switchTab('pro');
+          return;
+        }
+
+        selectedId = id;
+        document.querySelectorAll('.sys-btn').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.id === id);
+        });
+        placeholder.classList.remove('hidden');
+        frame.hidden = true;
+        launchPanel.hidden = false;
+        document.getElementById('launch-title').textContent = s.label;
+        document.getElementById('launch-hint').textContent =
+          'Typical extensions: ' + s.ext + '. ' + s.hint;
+        biosWrap.hidden = !s.bios;
+        biosLabel.textContent = s.biosLabel || 'BIOS';
+        romInput.value = '';
+        biosInput.value = '';
+        updateFavButton();
+      }
+
+      function resetPlayer() {
+        frame.src = 'about:blank';
+        frame.hidden = true;
+        placeholder.classList.remove('hidden');
+        document.getElementById('emu-toolbar').classList.remove('visible');
+        stopPlayTimer();
+      }
+
+      function launch() {
+        var s = SYSTEMS[selectedId];
+        if (!s) return;
+        var romFile = romInput.files[0];
+        if (!romFile) {
+          alert('Choose a ROM or disc image first.');
+          return;
+        }
+
+        currentRomName = romFile.name.replace(/\.[^.]+$/, '');
+
+        // track in history & stats
+        addGameHistory(s.label, currentRomName);
+        updateStatsOnLaunch(selectedId, currentRomName);
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          var romBuf = reader.result;
+          function send(biosBuf) {
+            var transfer = [romBuf];
+            if (biosBuf && biosBuf.byteLength) transfer.push(biosBuf);
+            
+            var payload = { 
+              type: 'EJS_LAUNCH', 
+              core: s.core, 
+              rom: romBuf, 
+              bios: biosBuf
+            };
+
+            openPlayerAndPost(payload, transfer);
+            
+            // show toolbar & start timer
+            document.getElementById('emu-toolbar').classList.add('visible');
+            startPlayTimer();
+          }
+          var bf = biosInput.files[0];
+          if (s.bios && bf) {
+            var br = new FileReader();
+            br.onload = function () { send(br.result); };
+            br.readAsArrayBuffer(bf);
+          } else {
+            send(null);
+          }
+        };
+        reader.readAsArrayBuffer(romFile);
+      }
+
+      // Hook launch to the button with Game Info check
+      btnLaunch.addEventListener('click', function(e) {
+        if (e.isTrusted && romInput.files[0]) {
+           var rn = romInput.files[0].name.replace(/\.[^.]+$/, '');
+           var sysLabel = SYSTEMS[selectedId]?.label || '';
+           if (!document.getElementById('modal-game-info').classList.contains('open')) {
+             fetchGameInfo(rn, sysLabel);
+             return;
+           }
+        }
+        launch();
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', resetPlayer);
+
+      /* ── fav toggle on launch panel ────────── */
+      document.getElementById('btn-fav').addEventListener('click', function () {
+        if (!currentUser()) { alert('Log in to save favorites.'); return; }
+        if (!selectedId || !romInput.files[0]) { alert('Select a ROM first.'); return; }
+        var rn = romInput.files[0].name.replace(/\.[^.]+$/, '');
+        var s = SYSTEMS[selectedId];
+        if (isFavorite(selectedId, rn)) { removeFavorite(selectedId, rn); }
+        else { addFavorite(selectedId, s.label, rn); }
+        updateFavButton();
+        renderFavorites();
+      });
+      romInput.addEventListener('change', function () { updateFavButton(); });
+
+      /* ── screenshot capture ────────────────── */
+      document.getElementById('btn-screenshot').addEventListener('click', function () {
+        if (!currentUser()) { alert('Log in to capture screenshots.'); return; }
+        if (frame.hidden) { alert('No game is running.'); return; }
+        try { frame.contentWindow.postMessage({ type: 'CAPTURE_SCREENSHOT' }, appMessageOrigin()); }
+        catch (ex) { alert('Could not capture screenshot.'); }
+      });
+
+      /* ── fullscreen ─────────────────────────── */
+      document.getElementById('btn-fullscreen').addEventListener('click', function () {
+        if (frame.hidden) return;
+        if (frame.requestFullscreen) frame.requestFullscreen();
+        else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+      });
+
+      /* ── lightbox events ────────────────────── */
+      document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+      document.getElementById('lightbox').addEventListener('click', function (e) {
+        if (e.target === this) closeLightbox();
+      });
+      document.getElementById('lightbox-download').addEventListener('click', function () {
+        var ss = getScreenshots(); if (lightboxIndex >= ss.length) return;
+        downloadScreenshot(ss[lightboxIndex].data, ss[lightboxIndex].rom + '.jpg');
+      });
+      document.getElementById('lightbox-delete').addEventListener('click', function () {
+        deleteScreenshot(lightboxIndex); closeLightbox(); renderScreenshotGallery();
+      });
+
+      /* ── message handler (screenshots + EJS) ── */
+      window.addEventListener('message', function (e) {
+        if (e.source !== frame.contentWindow) return;
+        if (!isTrustedAppOrigin(e.origin)) return;
+        if (!e.data) return;
+        if (e.data.type === 'EJS_PLAYER_READY') { /* emulator loaded */ }
+        if (e.data.type === 'SCREENSHOT_RESULT' && e.data.data) {
+          var s = SYSTEMS[selectedId];
+          saveScreenshot(e.data.data, s ? s.label : 'Unknown', currentRomName || 'game');
+          showToast('📷 Screenshot saved!');
+        }
+      });
+
+      /* ── Tab navigation ───────────────────── */
+      document.getElementById('tab-bar').addEventListener('click', function (e) {
+        var btn = e.target.closest('.tab-btn');
+        if (!btn) return;
+        switchTab(btn.dataset.tab);
+      });
+
+      /* ── Page-level renderers ──────────────── */
+      function renderLibraryPage() {
+        renderLibrary();
+      }
+
+      function renderLeaderboard() {
+        return;
+        var container = document.getElementById('leaderboard-list');
+        if (!container) return;
+        
+        var currentUserId = currentUser() ? currentUser()._id : null;
+
+        db.collection('leaderboard_public')
+          .orderBy('totalTimeMs', 'desc')
+          .limit(10)
+          .get()
+          .then(function(snapshot) {
+            if (snapshot.empty) {
+              container.innerHTML = '<div class="page-empty">Verified leaderboard entries are coming soon.</div>';
+              return;
+            }
+
+            container.innerHTML = '';
+            var rank = 1;
+            snapshot.forEach(function(doc) {
+              var data = doc.data();
+              var totalTimeMs = Number(data.totalTimeMs || 0);
+              var isMe = currentUserId === doc.id;
+              
+              var item = document.createElement('div');
+              item.className = 'leaderboard-item ' + (rank <= 3 ? 'rank-' + rank : '') + (isMe ? ' is-me' : '');
+
+              var avatarUrl = safeAvatarUrl(
+                data.avatar,
+                'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + encodeURIComponent(doc.id)
+              );
+              var rankNum = document.createElement('div');
+              rankNum.className = 'rank-num';
+              rankNum.textContent = String(rank);
+
+              var avatar = document.createElement('div');
+              avatar.className = 'leaderboard-avatar';
+              avatar.style.backgroundImage = 'url("' + avatarUrl + '")';
+
+              var info = document.createElement('div');
+              info.className = 'leaderboard-info';
+
+              var nameRow = document.createElement('div');
+              nameRow.className = 'lb-name';
+
+              var nameText = document.createElement('span');
+              nameText.textContent = data.name || 'Anonymous Player';
+              nameRow.appendChild(nameText);
+
+              if (isMe) {
+                var youTag = document.createElement('span');
+                youTag.className = 'tag';
+                youTag.style.fontSize = '0.6rem';
+                youTag.style.padding = '0.1rem 0.3rem';
+                youTag.textContent = 'YOU';
+                nameRow.appendChild(youTag);
+              }
+
+              if (data.isPro || data.isProPlus) {
+                var proTag = document.createElement('span');
+                proTag.className = 'badge-pro';
+                proTag.textContent = data.isProPlus ? 'PRO+' : 'PRO';
+                nameRow.appendChild(proTag);
+              }
+
+              var meta = document.createElement('div');
+              meta.className = 'lb-meta';
+
+              var playStat = document.createElement('span');
+              playStat.className = 'lb-stat';
+              playStat.textContent = 'Played: ' + formatPlayTime(totalTimeMs);
+
+              var achStat = document.createElement('span');
+              achStat.className = 'lb-stat';
+              achStat.textContent = 'Achievements: ' + Number(data.achievementsCount || 0);
+
+              meta.appendChild(playStat);
+              meta.appendChild(achStat);
+              info.appendChild(nameRow);
+              info.appendChild(meta);
+              item.appendChild(rankNum);
+              item.appendChild(avatar);
+              item.appendChild(info);
+              container.appendChild(item);
+              rank++;
+              return;
+               
+              // Get achievement count
+              var achTotal = 0;
+              if (data.achievements) achTotal = data.achievements.length;
+              
+              item.innerHTML = `
+                <div class="rank-num">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</div>
+                <div class="leaderboard-avatar" style="background-image: url('${data.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + doc.id}')"></div>
+                <div class="leaderboard-info">
+                  <div class="lb-name">
+                    ${data.name || 'Anonymous Player'} 
+                    ${isMe ? '<span class="tag" style="font-size:0.6rem;padding:0.1rem 0.3rem">YOU</span>' : ''}
+                    ${data.isPro ? '<span class="badge-pro">PRO</span>' : ''}
+                  </div>
+                  <div class="lb-meta">
+                    <span class="lb-stat">🕒 <b>${formatPlayTime(stats.totalTimeMs)}</b> played</span>
+                    <span class="lb-stat">🏆 <b>${achTotal}</b> achievements</span>
+                  </div>
+                </div>
+              `;
+              container.appendChild(item);
+              rank++;
+            });
+          })
+          .catch(function(e) {
+            console.error('Leaderboard error:', e);
+            container.innerHTML = '<div class="page-empty">Verified leaderboard is unavailable right now.</div>';
+          });
+      }
+
+      function renderStatsPage() {
+        var grid = document.getElementById('page-stats-grid');
+        var list = document.getElementById('page-achievements-list');
+        var user = currentUser();
+        if (!user) {
+          grid.innerHTML = '<div class="page-empty" style="grid-column:1/-1">Log in to see your stats.</div>';
+          list.innerHTML = '';
+          return;
+        }
+        var stats = getStats();
+        // stats grid
+        grid.innerHTML = '';
+        [{ v: stats.totalSessions, l: 'Sessions' }, { v: formatPlayTime(stats.totalTimeMs), l: 'Play Time' },
+        { v: stats.uniqueGames.length, l: 'Unique Games' }, { v: stats.systemsUsed.length, l: 'Systems Used' }].forEach(function (item) {
+          var c = document.createElement('div'); c.className = 'stat-card';
+          var val = document.createElement('div'); val.className = 'stat-value'; val.textContent = item.v;
+          var lbl = document.createElement('div'); lbl.className = 'stat-label'; lbl.textContent = item.l;
+          c.appendChild(val); c.appendChild(lbl); grid.appendChild(c);
+        });
+        // achievements
+        var earned = getEarnedAchievements();
+        list.innerHTML = '';
+        ACHIEVEMENTS.forEach(function (ach) {
+          var ok = earned.indexOf(ach.id) !== -1;
+          var div = document.createElement('div');
+          div.className = 'achievement ' + (ok ? 'unlocked' : 'locked');
+          var icon = document.createElement('span'); icon.className = 'ach-icon'; icon.textContent = ach.icon;
+          var info = document.createElement('div'); info.className = 'ach-info';
+          var nm = document.createElement('div'); nm.className = 'ach-name'; nm.textContent = ach.name;
+          var ds = document.createElement('div'); ds.className = 'ach-desc'; ds.textContent = ach.desc;
+          info.appendChild(nm); info.appendChild(ds);
+          if (!ok) {
+            var p = ach.prog(stats);
+            var bar = document.createElement('div'); bar.className = 'progress-bar';
+            var fill = document.createElement('div'); fill.className = 'progress-fill';
+            fill.style.width = Math.round((p[0] / p[1]) * 100) + '%';
+            bar.appendChild(fill); info.appendChild(bar);
+          }
+          div.appendChild(icon); div.appendChild(info);
+          if (ok) { var ck = document.createElement('span'); ck.className = 'ach-check'; ck.textContent = '\u2713'; div.appendChild(ck); }
+          list.appendChild(div);
+        });
+      }
+
+        var selectedTier = 'pro'; // Global state (inside scope) 
+        
+        window.selectTier = function(tier) {
+          selectedTier = tier;
+          renderProPage();
+          // Visual highlight
+          var cardPro = document.getElementById('pro-card-standard');
+          var cardPlus = document.getElementById('pro-card-plus');
+          if (cardPro && cardPlus) {
+            // Cards
+            cardPro.style.boxShadow = tier === 'pro' ? '0 0 0 2px var(--accent)' : 'none';
+            cardPlus.style.boxShadow = tier === 'pro_plus' ? '0 0 0 2px var(--accent1)' : 'none';
+            cardPro.style.transform = tier === 'pro' ? 'translateY(-5px)' : 'none';
+            cardPlus.style.transform = tier === 'pro_plus' ? 'translateY(-5px)' : 'none';
+            
+            // Buttons
+            var btnPro = document.getElementById('pro-btn-standard');
+            var btnPlus = document.getElementById('pro-btn-plus');
+            if (btnPro && btnPlus) {
+              btnPro.className = tier === 'pro' ? 'btn-small primary' : 'btn-small ghost';
+              btnPlus.className = tier === 'pro_plus' ? 'btn-small primary' : 'btn-small ghost';
+              btnPro.textContent = tier === 'pro' ? '✓ Selected' : 'Select Plan';
+              btnPlus.textContent = tier === 'pro_plus' ? '✓ Selected' : 'Select Plan';
+            }
+          }
+        };
+
+        function renderProPage() {
+          var container = document.getElementById('pro-unlock-container');
+          if (!container) return;
+          container.innerHTML = '';
+          
+          var user = currentUser();
+          if (!user) {
+            container.innerHTML = '<button class="primary" onclick="openModal(\'modal-login\')" style="height:54px; width:280px; border-radius:100px">Log in to Unlock Pro</button>';
+            return;
+          }
+
+          if (user.isProPlus) {
+            container.innerHTML = '<div style="color:var(--accent1); font-weight:700; font-size:1.2rem">🕹️ YOU ARE PRO PLUS</div>';
+            return;
+          }
+
+          // Show specific status if applicable
+          if (user.isPro && selectedTier === 'pro') {
+            container.innerHTML = '<div style="color:var(--accent); font-weight:700; font-size:1.2rem">🔥 YOU ARE PRO</div>';
+            return;
+          }
+
+          var title = selectedTier === 'pro_plus' ? 'PRO PLUS' : 'PRO';
+          var price = selectedTier === 'pro_plus' ? '$5' : '$3';
+          var time = selectedTier === 'pro_plus' ? '6 hours' : '12 hours';
+          var accent = selectedTier === 'pro_plus' ? 'var(--accent1)' : 'var(--accent)';
+
+          // Instructions
+          var instr = document.createElement('div');
+          instr.style.cssText = 'background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; margin-bottom:1.5rem; text-align:left; border:1px solid ' + accent + ';';
+          instr.innerHTML = `
+            <h4 style="margin-top:0; color:${accent}">How to get ${title}:</h4>
+            <p style="font-size:0.85rem; margin-bottom:1rem">Send <b>${price}</b> via Cash App using the button below with your account email in the note. Your ${title} code should arrive within <b>${time}</b>.</p>
+            <p style="font-size:0.75rem; color:var(--muted); margin:0">After you receive the code, paste it below to unlock your account.</p>
+          `;
+        
+        // Form
+        var form = document.createElement('div');
+        form.style.cssText = 'display:flex; flex-direction:column; gap:0.8rem;';
+
+        var paymentBtn = document.createElement('a');
+        paymentBtn.className = 'primary';
+        paymentBtn.style.cssText = 'height:54px; display:flex; align-items:center; justify-content:center; text-decoration:none;';
+        paymentBtn.href = 'https://cash.app/$RetroUniverseEmu';
+        paymentBtn.target = '_blank';
+        paymentBtn.rel = 'noopener';
+        paymentBtn.textContent = 'Open Cash App';
+        
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Enter ' + title + ' Access Code...';
+        input.className = 'form-input';
+        input.style.textAlign = 'center';
+        input.style.letterSpacing = '0.1em';
+        
+        var btn = document.createElement('button');
+        btn.className = 'primary';
+        btn.style.height = '54px';
+        btn.textContent = '🚀 Unlock ' + title + ' Now';
+        btn.textContent = 'Redeem ' + title + ' Code';
+        btn.addEventListener('click', function() {
+          redeemProCode(input.value.trim());
+        });
+        
+        form.appendChild(paymentBtn);
+        form.appendChild(input);
+        form.appendChild(btn);
+        
+        container.appendChild(instr);
+        container.appendChild(form);
+      }
+
+      async function redeemProCode(code) {
+        if (!code) return;
+        var user = currentUser();
+        if (!user) return;
+
+        showToast('🎟️ Verifying code...');
+
+        // (Removed Hardcoded Master Code for Security)
+
+        // 2. Check Firestore for the access code document
+        try {
+          var normalizedCode = code.toUpperCase().trim();
+          var doc = await db.collection('promo_codes').doc(normalizedCode).get();
+            
+          if (!doc.exists) {
+            showToast('❌ Invalid code.');
+            return;
+          }
+
+          var data = doc.data();
+
+          if (data.used) {
+            showToast('❌ This code has already been used.');
+            return;
+          }
+
+          var tier = data.tier || 'pro';
+          var redeemedAt = Date.now();
+          var updates = {
+            isPro: true,
+            isProPlus: tier === 'pro_plus' ? true : !!user.isProPlus,
+            lastPromoCodeId: doc.id
+          };
+          var batch = db.batch();
+          batch.update(doc.ref, {
+            used: true,
+            usedBy: user._id || user.uid || auth.currentUser?.uid,
+            redeemedAt: redeemedAt
+          });
+          batch.set(db.collection('users').doc(user._id), updates, { merge: true });
+          await batch.commit();
+
+          Object.keys(updates).forEach(function (k) { currentSessionUser[k] = updates[k]; });
+          localStorage.setItem('rw_user_cache_' + user._id, JSON.stringify(currentSessionUser));
+          showToast('🎉 Code Accepted! Welcome to RetroUniverse ' + (tier === 'pro_plus' ? 'PRO PLUS' : 'PRO') + '!');
+          updateAuthUI();
+          switchTab('pro');
+
+        } catch (e) {
+          console.error('Redemption error:', e);
+          showToast('❌ Error: ' + e.message);
+        }
+      }
+
+      /* ── Admin Logic ────────────────────── */
+      var logoClicks = 0;
+      var logoTimer = null;
+
+      function initAdminTrigger() {
+        var logo = document.querySelector('.logo');
+        if (!logo) return;
+        logo.addEventListener('click', function() {
+          logoClicks++;
+          clearTimeout(logoTimer);
+          logoTimer = setTimeout(() => { logoClicks = 0; }, 2000);
+          if (logoClicks >= 5) {
+            logoClicks = 0;
+            var user = currentUser();
+            // Secure check: Must be logged in as the configured admin UID
+            if (isAdminUser(user)) {
+              openModal('modal-admin');
+              fetchRecentUsers();
+              showToast('🔑 Admin Console Opened.');
+            } else {
+              showToast('❌ Access Denied: Admin Privileges Required.');
+              console.warn('Unauthorized admin access attempt:', user ? user.uid : 'Anonymous');
+            }
+          }
+        });
+      }
+
+      async function generateMasterCode() {
+        var user = currentUser();
+        if (!isAdminUser(user)) {
+          showToast('❌ Unauthorized. Admin status required.');
+          return;
+        }
+        var listContainer = document.getElementById('admin-gen-display-list');
+        var copyBtn = document.getElementById('btn-admin-copy');
+        var countInput = document.getElementById('admin-gen-count');
+        var count = parseInt(countInput.value) || 5;
+        var tier = document.querySelector('input[name="admin-gen-tier"]:checked').value;
+        
+        listContainer.innerHTML = '';
+        var generatedCodes = [];
+        showToast('🎲 Generating batch of ' + count + ' (' + tier.toUpperCase() + ')...');
+
+        try {
+          for (var i = 0; i < count; i++) {
+            var finalCode = await createPromoCodeDoc(tier);
+            generatedCodes.push(finalCode);
+
+            // Display in list (Only show first 10 for performance if batch is huge)
+            if (i < 10) {
+              var codeDiv = document.createElement('div');
+              codeDiv.className = 'admin-code-text';
+              codeDiv.style.fontSize = '1.3rem';
+              codeDiv.textContent = finalCode;
+              listContainer.appendChild(codeDiv);
+            }
+          }
+          
+          if (count > 10) {
+            var more = document.createElement('div');
+            more.style.fontSize = '0.75rem';
+            more.style.color = 'var(--muted)';
+            more.style.marginTop = '0.5rem';
+            more.textContent = '+ ' + (count - 10) + ' more codes created. File downloaded.';
+            listContainer.appendChild(more);
+
+            // Auto-Download for large batches
+            var blob = new Blob([generatedCodes.join('\n')], { type: 'text/plain' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            var now = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = 'RetroUniverse_' + tier.toUpperCase() + '_Codes_' + now + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+          
+          showToast('✅ ' + count + ' Codes Saved & Downloaded!');
+          copyBtn.disabled = false;
+          copyBtn.dataset.allCodes = generatedCodes.join('\n');
+        } catch (e) {
+          console.error(e);
+          showToast('❌ Batch generation error.');
+        }
+      }
+
+      async function fetchRecentUsers() {
+        var container = document.getElementById('admin-recent-users');
+        if (!container) return;
+        
+        try {
+          var snap = await db.collection('users').orderBy('lastSeen', 'desc').limit(5).get();
+          container.innerHTML = '';
+          if (snap.empty) {
+            container.innerHTML = '<div style="font-size:0.75rem; color:var(--muted)">No active users found.</div>';
+            return;
+          }
+
+          snap.forEach(function(doc) {
+            var d = doc.data();
+            var div = document.createElement('div');
+            div.style.cssText = 'background:rgba(255,255,255,0.03); padding:0.6rem 0.8rem; border-radius:6px; cursor:pointer; font-size:0.8rem; border:1px solid transparent; transition: all 0.2s;';
+
+            var topRow = document.createElement('div');
+            topRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center';
+
+            var nameEl = document.createElement('div');
+            nameEl.style.cssText = 'font-weight:700; color:var(--text-bright)';
+            nameEl.textContent = d.name || 'Anonymous';
+
+            var dateEl = document.createElement('div');
+            dateEl.style.cssText = 'font-size:0.7rem; opacity:0.5';
+            dateEl.textContent = new Date(d.lastSeen || d.created || Date.now()).toLocaleDateString();
+
+            var emailEl = document.createElement('div');
+            emailEl.style.cssText = 'font-size:0.75rem; color:var(--muted)';
+            emailEl.textContent = d.email || doc.id.substring(0, 10) + '...';
+
+            topRow.appendChild(nameEl);
+            topRow.appendChild(dateEl);
+            div.appendChild(topRow);
+            div.appendChild(emailEl);
+            div.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:center">
+                <div style="font-weight:700; color:var(--text-bright)">${d.name || 'Anonymous'}</div>
+                <div style="font-size:0.7rem; opacity:0.5">${new Date(d.lastSeen || d.created || Date.now()).toLocaleDateString()}</div>
+              </div>
+              <div style="font-size:0.75rem; color:var(--muted)">${d.email || doc.id.substring(0, 10) + '...'}</div>
+            `;
+            div.textContent = '';
+            div.appendChild(topRow);
+            div.appendChild(emailEl);
+            div.addEventListener('click', function() {
+              currentModUser = { id: doc.id, data: d };
+              renderModUserResult();
+              document.getElementById('admin-user-search').value = d.email || doc.id;
+            });
+            div.addEventListener('mouseenter', function() { this.style.borderColor = 'var(--accent1)'; this.style.background = 'rgba(255,255,255,0.06)'; });
+            div.addEventListener('mouseleave', function() { this.style.borderColor = 'transparent'; this.style.background = 'rgba(255,255,255,0.03)'; });
+            container.appendChild(div);
+          });
+        } catch (e) {
+          console.error('Recent users err:', e);
+          container.innerHTML = '<div style="font-size:0.7rem; color:var(--muted)">Error loading recent users.</div>';
+        }
+      }
+
+      var currentModUser = null;
+      async function searchModerationUser() {
+        var input = document.getElementById('admin-user-search').value.trim();
+        var resultDiv = document.getElementById('admin-user-result');
+        if (!input) return;
+
+        showToast('🔍 Searching user...');
+        
+        try {
+          // 1. Try by Email
+          var email = input.toLowerCase();
+          var snap = await db.collection('users').where('email', '==', email).limit(1).get();
+          
+          if (snap.empty && input !== email) {
+            snap = await db.collection('users').where('email', '==', input).limit(1).get();
+          }
+
+          // 2. Try by UID (if email search failed)
+          if (snap.empty) {
+            var doc = await db.collection('users').doc(input).get();
+            if (doc.exists) {
+              currentModUser = { id: doc.id, data: doc.data() };
+              renderModUserResult();
+              showToast('✅ User found by UID.');
+              return;
+            }
+          }
+
+          if (snap.empty) {
+            showToast('❌ User not found. Try UID if email fails.');
+            resultDiv.style.display = 'none';
+            return;
+          }
+
+          var doc = snap.docs[0];
+          currentModUser = { id: doc.id, data: doc.data() };
+          renderModUserResult();
+          showToast('✅ User found by Email.');
+        } catch (e) {
+          console.error(e);
+          showToast('❌ Search error.');
+        }
+      }
+
+      function renderModUserResult() {
+        var div = document.getElementById('admin-user-result');
+        var d = currentModUser.data;
+        div.style.display = 'flex';
+        
+        var statusLabel = 'ACTIVE';
+        var statusColor = '#00ff41';
+        if (d.banStatus === 'banned') { statusLabel = 'PERMANENTLY BANNED'; statusColor = '#ff3366'; }
+        else if (d.banStatus === 'suspended' && d.banExpires > Date.now()) {
+          statusLabel = 'SUSPENDED until ' + new Date(d.banExpires).toLocaleDateString();
+          statusColor = '#ffbb00';
+        }
+
+        div.textContent = '';
+
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex; justify-content:space-between; align-items:center';
+
+        var userWrap = document.createElement('div');
+        var nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight:700; color:white';
+        nameEl.textContent = d.name || 'Unknown';
+        var emailEl = document.createElement('div');
+        emailEl.style.cssText = 'font-size:0.75rem; color:var(--muted)';
+        emailEl.textContent = d.email || '';
+        userWrap.appendChild(nameEl);
+        userWrap.appendChild(emailEl);
+
+        var statusEl = document.createElement('div');
+        statusEl.style.cssText = 'font-size:0.7rem; font-weight:700; background:rgba(0,0,0,0.3); padding:0.2rem 0.5rem; border-radius:4px';
+        statusEl.style.color = statusColor;
+        statusEl.textContent = statusLabel;
+
+        header.appendChild(userWrap);
+        header.appendChild(statusEl);
+
+        var controls = document.createElement('div');
+        controls.style.cssText = 'display:grid; grid-template-columns:1fr 1fr; gap:0.5rem';
+
+        var select = document.createElement('select');
+        select.id = 'mod-duration';
+        select.className = 'form-input';
+        select.style.fontSize = '0.8rem';
+        [
+          { value: 'active', label: 'Active (Unban)' },
+          { value: '1d', label: '1 Day' },
+          { value: '3d', label: '3 Days' },
+          { value: '1w', label: '1 Week' },
+          { value: '2w', label: '2 Weeks' },
+          { value: '1m', label: '1 Month' },
+          { value: 'forever', label: 'Forever' }
+        ].forEach(function(optionData) {
+          var option = document.createElement('option');
+          option.value = optionData.value;
+          option.textContent = optionData.label;
+          select.appendChild(option);
+        });
+
+        var button = document.createElement('button');
+        button.className = 'primary danger';
+        button.id = 'btn-apply-mod';
+        button.style.cssText = 'font-size:0.8rem; height:36px';
+        button.textContent = 'Apply';
+
+        controls.appendChild(select);
+        controls.appendChild(button);
+        div.appendChild(header);
+        div.appendChild(controls);
+        document.getElementById('btn-apply-mod').addEventListener('click', applyModeration);
+        return;
+
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <div style="font-weight:700; color:white">${d.name || 'Unknown'}</div>
+              <div style="font-size:0.75rem; color:var(--muted)">${d.email}</div>
+            </div>
+            <div style="font-size:0.7rem; font-weight:700; color:${statusColor}; background:rgba(0,0,0,0.3); padding:0.2rem 0.5rem; border-radius:4px">${statusLabel}</div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem">
+            <select id="mod-duration" class="form-input" style="font-size:0.8rem">
+              <option value="active">🟢 Active (Unban)</option>
+              <option value="1d">1 Day</option>
+              <option value="3d">3 Days</option>
+              <option value="1w">1 Week</option>
+              <option value="2w">2 Weeks</option>
+              <option value="1m">1 Month</option>
+              <option value="forever">🚫 Forever</option>
+            </select>
+            <button class="primary danger" id="btn-apply-mod" style="font-size:0.8rem; height:36px">Apply</button>
+          </div>
+        `;
+
+        document.getElementById('btn-apply-mod').addEventListener('click', applyModeration);
+      }
+
+      async function applyModeration() {
+        var user = currentUser();
+        if (!isAdminUser(user)) {
+          showToast('❌ Unauthorized. Admin status required.');
+          return;
+        }
+        if (!currentModUser) return;
+        var duration = document.getElementById('mod-duration').value;
+        var updates = { banStatus: 'active', banExpires: 0 };
+        var now = Date.now();
+
+        if (duration === 'active') {
+          updates = { banStatus: 'active', banExpires: 0 };
+        } else if (duration === 'forever') {
+          updates = { banStatus: 'banned', banExpires: null };
+        } else {
+          var ms = 0;
+          if (duration === '1d') ms = 86400000;
+          else if (duration === '3d') ms = 259200000;
+          else if (duration === '1w') ms = 604800000;
+          else if (duration === '2w') ms = 1209600000;
+          else if (duration === '1m') ms = 2592000000;
+          updates = { banStatus: 'suspended', banExpires: now + ms };
+        }
+
+        try {
+          showToast('⏳ Applying Moderation...');
+          await db.collection('users').doc(currentModUser.id).update(updates);
+          currentModUser.data = Object.assign(currentModUser.data, updates);
+          renderModUserResult();
+          showToast('✅ Account Updated.');
+        } catch (e) {
+          console.error(e);
+          showToast('❌ Update failed: ' + (e.message || 'Unknown error'));
+        }
+      }
+
+      async function checkStripeSuccess() {
+        return;
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('session') === 'pro_success') {
+          var user = currentUser();
+          if (user && !user.isPro) {
+            await updateUser({ isPro: true });
+            showToast('🎉 Payment Successful! Welcome to PRO club.');
+            updateAuthUI();
+            switchTab('pro');
+            // Remove the parameter from URL without reload
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      }
+
+      function renderScreenshotsPage() {
+        var gallery = document.getElementById('page-screenshot-gallery');
+        var countEl = document.getElementById('page-ss-count');
+        var user = currentUser();
+        if (!user) {
+          gallery.innerHTML = '<div class="page-empty">Log in to see your screenshots.</div>';
+          if (countEl) countEl.textContent = '';
+          return;
+        }
+        var ss = getScreenshots();
+        var max = getMaxScreenshots();
+        if (countEl) countEl.textContent = '(' + ss.length + '/' + max + ')';
+        gallery.innerHTML = '';
+        if (ss.length === 0) {
+          gallery.innerHTML = '<div class="page-empty">No screenshots yet. Use the 📷 Capture button while playing a game.</div>';
+          return;
+        }
+        ss.forEach(function (s, i) {
+          var t = document.createElement('div'); t.className = 'screenshot-thumb';
+          var img = document.createElement('img'); img.src = s.data; img.alt = s.rom;
+          var meta = document.createElement('div'); meta.className = 'ss-meta';
+          meta.textContent = s.rom + ' \u00b7 ' + s.system;
+          var ov = document.createElement('div'); ov.className = 'ss-overlay';
+          var vb = document.createElement('button'); vb.className = 'btn-small'; vb.textContent = 'View';
+          vb.addEventListener('click', function (e) { e.stopPropagation(); openLightbox(i); });
+          var db = document.createElement('button'); db.className = 'btn-small'; db.textContent = '\ud83d\udcbe'; db.title = 'Download';
+          db.addEventListener('click', function (e) { e.stopPropagation(); downloadScreenshot(s.data, s.rom + '_' + s.system + '.jpg'); });
+          var xb = document.createElement('button'); xb.className = 'btn-small danger'; xb.textContent = '\u2715';
+          xb.addEventListener('click', function (e) { e.stopPropagation(); deleteScreenshot(i); renderScreenshotsPage(); });
+          ov.appendChild(vb); ov.appendChild(db); ov.appendChild(xb);
+          t.appendChild(img); t.appendChild(meta); t.appendChild(ov);
+          t.addEventListener('click', function () { openLightbox(i); });
+          gallery.appendChild(t);
+        });
+      }
+
+      /* ── Contact form ──────────────────────── */
+      document.getElementById('open-contact').addEventListener('click', function () {
+        document.getElementById('contact-success').classList.remove('show');
+        openModal('modal-contact');
+      });
+
+      document.getElementById('contact-submit').addEventListener('click', function () {
+        var name = document.getElementById('contact-name').value.trim();
+        var email = document.getElementById('contact-email').value.trim();
+        var subject = document.getElementById('contact-subject').value.trim();
+        var message = document.getElementById('contact-message').value.trim();
+        if (!name) { alert('Please enter your name.'); return; }
+        if (!email) { alert('Please enter your email.'); return; }
+        if (!subject) { alert('Please enter a subject.'); return; }
+        if (!message) { alert('Please enter a message.'); return; }
+        var body = 'Name: ' + name + '\nEmail: ' + email + '\n\n' + message;
+        var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+          + '&to=' + encodeURIComponent('RetroWebSupport@proton.me')
+          + '&su=' + encodeURIComponent('[RetroUniverse] ' + subject)
+          + '&body=' + encodeURIComponent(body);
+        window.open(gmailUrl, '_blank');
+        document.getElementById('contact-success').classList.add('show');
+      });
+
+      /* ── Game Info (RAWG API) ────────────────── */
+      var RAWG_KEY = '5ef5370216444855b7ccff3672d5069f';
+      async function fetchGameInfo(name, system) {
+        try {
+          if (netplayUrl) {
+            window.EJS_netplayUrl = netplayUrl;
+            window.EJS_netplayServer = netplayUrl;
+            console.log('Netplay URL is set to:', netplayUrl);
+          }
+          var query = encodeURIComponent(name + ' ' + (system || ''));
+          var res = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${query}&page_size=1`);
+          var data = await res.json();
+          if (data.results && data.results.length > 0) {
+            var g = data.results[0];
+            document.getElementById('gi-banner').style.backgroundImage = `url(${g.background_image})`;
+            document.getElementById('gi-title').textContent = g.name;
+            document.getElementById('gi-meta').textContent = (g.released || 'Unknown date') + ' \u00b7 ' + (g.genres.map(gn => gn.name).join(', ') || 'Game');
+            var dRes = await fetch(`https://api.rawg.io/api/games/${g.id}?key=${RAWG_KEY}`);
+            var dData = await dRes.json();
+            document.getElementById('gi-desc').textContent = dData.description_raw ? dData.description_raw.split('\n')[0] : 'No description available.';
+            openModal('modal-game-info');
+          } else {
+            launchCurrentGame();
+          }
+        } catch (e) {
+          launchCurrentGame();
+        }
+      }
+
+      window.launchCurrentGame = function() {
+        closeModal('modal-game-info');
+        btnLaunch.click();
+      };
+
+
+
+
+
+
+      /* ── initialization & theme ──────────── */
+      var THEMES = [
+        { id: 'default', name: 'Default', hex: '#e07840' },
+        { id: 'midnight', name: 'Midnight', hex: '#7c6cf0' },
+        { id: 'crt', name: 'CRT Green', hex: '#00ff41' },
+        { id: 'sakura', name: 'Sakura', hex: '#e8779a' },
+        { id: 'neon', name: 'Neon', hex: '#ff2d95' },
+        { id: 'light', name: 'Light', hex: '#d06030' }
+      ];
+
+      function applyTheme(themeId) {
+        if (themeId === 'default') {
+          document.documentElement.removeAttribute('data-theme');
+        } else {
+          document.documentElement.setAttribute('data-theme', themeId);
+        }
+        localStorage.setItem('rw_theme', themeId);
+        renderThemeDropdown();
+      }
+
+      function loadTheme() {
+        var saved = localStorage.getItem('rw_theme') || 'default';
+        applyTheme(saved);
+      }
+
+      function renderThemeDropdown() {
+        var dd = document.getElementById('theme-dropdown');
+        if (!dd) return;
+        dd.innerHTML = '';
+        var current = localStorage.getItem('rw_theme') || 'default';
+        THEMES.forEach(function (t) {
+          var btn = document.createElement('button');
+          btn.className = 'theme-option' + (current === t.id ? ' active' : '');
+          var swatch = document.createElement('div');
+          swatch.className = 'theme-swatch';
+          swatch.style.backgroundColor = t.hex;
+          var label = document.createElement('span');
+          label.textContent = t.name;
+          btn.appendChild(swatch);
+          btn.appendChild(label);
+            var isLocked = (t.id === 'sakura' || t.id === 'neon') && !(currentUser()?.isPro);
+            if (isLocked) {
+              btn.classList.add('locked');
+              label.textContent = t.name;
+              btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+          showToast('⭐ Unlock ' + t.name + ' with RetroUniverse PRO!');
+                switchTab('pro');
+                dd.classList.remove('open');
+              });
+            } else {
+              btn.addEventListener('click', function () {
+                applyTheme(t.id);
+                dd.classList.remove('open');
+              });
+            }
+            dd.appendChild(btn);
+        });
+      }
+
+      /* ── Community Chat ──────────────────── */
+      var chatUnsubscribe = null;
+
+      function updateChatUI() {
+        var user = currentUser();
+        var input = document.getElementById('chat-input');
+        var btn = document.getElementById('chat-send-btn');
+        if (!input || !btn) return;
+        
+        if (user) {
+          input.disabled = false;
+          input.placeholder = "Type a message...";
+          btn.disabled = false;
+        } else {
+          input.disabled = true;
+          input.placeholder = "Log in to chat...";
+          btn.disabled = true;
+        }
+      }
+
+      function initChat() {
+        var container = document.getElementById('chat-messages');
+        if (!container) return;
+        
+        if (chatUnsubscribe) chatUnsubscribe();
+        
+        chatUnsubscribe = db.collection('global_chat')
+          .orderBy('timestamp', 'desc')
+          .limit(50)
+          .onSnapshot(function(snapshot) {
+            container.innerHTML = '';
+            var emptyDiv = document.createElement('div');
+            
+            if (snapshot.empty) {
+              emptyDiv.className = 'page-empty';
+              emptyDiv.textContent = 'No messages yet. Be the first to say hi!';
+              container.appendChild(emptyDiv);
+              return;
+            }
+
+            var currentUserId = currentUser() ? currentUser()._id : null;
+            
+            var docs = [];
+            snapshot.forEach(function(doc) { docs.push(doc.data()); });
+            docs.reverse(); // Oldest first for chat display
+
+            docs.forEach(function(data) {
+              var isMe = currentUserId && data.uid === currentUserId;
+              
+              var msgDiv = document.createElement('div');
+              msgDiv.className = 'chat-message ' + (isMe ? 'me' : 'other');
+              
+              var senderDiv = document.createElement('div');
+              senderDiv.className = 'chat-sender';
+              
+              var timeStr = data.timestamp ? new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+              var nameStrong = document.createElement('strong');
+              nameStrong.textContent = data.displayName || 'Anonymous';
+              var timeSpan = document.createElement('span');
+              timeSpan.textContent = timeStr;
+              if (isMe) {
+                senderDiv.appendChild(timeSpan);
+                senderDiv.appendChild(document.createTextNode(' '));
+                senderDiv.appendChild(nameStrong);
+              } else {
+                senderDiv.appendChild(nameStrong);
+                senderDiv.appendChild(document.createTextNode(' '));
+                senderDiv.appendChild(timeSpan);
+              }
+
+              var bubble = document.createElement('div');
+              bubble.className = 'chat-bubble';
+              bubble.textContent = data.text || '';
+              
+              msgDiv.appendChild(senderDiv);
+              msgDiv.appendChild(bubble);
+              container.appendChild(msgDiv);
+            });
+            
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+          }, function(error) {
+            console.error('Chat sync error:', error);
+            container.innerHTML = '<div class="page-empty">Cannot load chat.</div>';
+          });
+      }
+
+      async function sendChatMessage(e) {
+        e.preventDefault();
+        var user = currentUser();
+        if (!user) return alert('You must be logged in to chat.');
+        
+        var input = document.getElementById('chat-input');
+        var text = input.value.trim();
+        if (!text) return;
+        
+        input.value = '';
+        input.focus();
+        
+        try {
+          await db.collection('global_chat').add({
+            uid: user._id,
+            displayName: user.name || 'User',
+            text: text,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          alert('Failed to send message: ' + e.message);
+        }
+      }
+
+      function init() {
+        loadTheme();
+        updateAuthUI();
+        renderButtons();
+        renderFavorites();
+        selectSystem('nes');
+
+        // Global Event Listeners
+        document.getElementById('theme-toggle')?.addEventListener('click', function () {
+          document.getElementById('theme-dropdown').classList.toggle('open');
+        });
+
+        document.getElementById('btn-reset')?.addEventListener('click', resetPlayer);
+
+        var chatForm = document.getElementById('chat-form');
+        if (chatForm) chatForm.addEventListener('submit', sendChatMessage);
+        
+        initAdminTrigger();
+        initChat();
+        updateAdsVisibility();
+        
+        document.getElementById('btn-admin-generate')?.addEventListener('click', generateMasterCode);
+        document.getElementById('btn-admin-search')?.addEventListener('click', searchModerationUser);
+        document.getElementById('admin-user-search')?.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') searchModerationUser();
+        });
+
+        // Load recent users when admin modal opens
+        var logo = document.querySelector('.logo');
+        if (logo) {
+          logo.addEventListener('click', function() {
+            if (document.getElementById('modal-admin').classList.contains('open')) {
+              fetchRecentUsers();
+            }
+          });
+        }
+
+        document.getElementById('btn-admin-copy')?.addEventListener('click', function() {
+          var codes = this.dataset.allCodes;
+          if (codes) {
+            var count = codes.split('\n').length;
+            navigator.clipboard.writeText(codes);
+            showToast('📋 ' + count + (count === 1 ? ' Code' : ' Codes') + ' copied to clipboard!');
+          }
+        });
+
+        document.getElementById('btn-admin-cleanup')?.addEventListener('click', deleteUsedCodes);
+
+        document.getElementById('admin-gen-count')?.addEventListener('input', function(e) {
+          var val = e.target.value;
+          var display = document.getElementById('admin-gen-count-val');
+          var btn = document.getElementById('btn-admin-generate');
+          if (display) display.textContent = val;
+          if (btn) btn.textContent = '🎲 Generate ' + val + ' New Codes';
+        });
+      }
+
+      async function deleteUsedCodes() {
+        var user = currentUser();
+        if (!isAdminUser(user)) return;
+        
+        if (!confirm('Are you sure you want to permanently delete ALL codes that have already been used?')) return;
+        
+        showToast('⏳ Cleaning up database...');
+        try {
+          var snap = await db.collection('promo_codes').where('used', '==', true).get();
+          if (snap.empty) {
+            showToast('✅ No used codes to clean up.');
+            return;
+          }
+          
+          var batch = db.batch();
+          snap.forEach(function(doc) {
+            batch.delete(doc.ref);
+          });
+          
+          await batch.commit();
+          showToast('🧹 Successfully deleted ' + snap.size + ' used codes.');
+        } catch (e) {
+          console.error(e);
+          showToast('❌ Cleanup failed: ' + e.message);
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+
+</html>
