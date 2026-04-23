@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #020205;
+      color: #7bb8ff;
+      font-family: "Space Grotesk", -apple-system, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    #game {
+      width: 100%;
+      min-height: 100vh;
+      display: block;
+    }
+    #status {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #05051a 0%, #020205 100%);
+      z-index: 100;
+      padding: 2rem;
+      text-align: left;
+    }
+    #status.hidden { display: none; }
+
+    /* Scanlines & CRT */
+    .crt-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 101;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+    }
+    .flicker {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 102;
+      background: rgba(18, 16, 16, 0.05);
+      animation: flicker 0.15s infinite;
+      opacity: 0.1;
+    }
+    @keyframes flicker {
+      0% { opacity: 0.08; }
+      5% { opacity: 0.12; }
+      15% { opacity: 0.1; }
+      30% { opacity: 0.13; }
+      45% { opacity: 0.09; }
+      60% { opacity: 0.11; }
+      85% { opacity: 0.1; }
+      100% { opacity: 0.12; }
+    }
+
+    .bios-window {
+      width: 100%;
+      max-width: 500px;
+      border: 1px solid #1a3a5f;
+      background: rgba(5, 10, 30, 0.8);
+      padding: 1.5rem;
+      border-radius: 4px;
+      box-shadow: 0 0 40px rgba(0, 100, 255, 0.1);
+      position: relative;
+    }
+    .bios-header {
+      font-size: 0.75rem;
+      color: #3d8bff;
+      text-transform: uppercase;
+      letter-spacing: 0.2rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #1a3a5f;
+      padding-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .bios-log {
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      min-height: 120px;
+    }
+    .log-line {
+      opacity: 0;
+      animation: typing 0.05s forwards;
+      display: block;
+    }
+    @keyframes typing { to { opacity: 1; } }
+
+    .loader-bar {
+      height: 4px;
+      background: #0d1a30;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    .loader-progress {
+      height: 100%;
+      background: #3d8bff;
+      width: 0%;
+      box-shadow: 0 0 15px #3d8bff;
+      animation: progress 2.5s infinite ease-in-out;
+    }
+    @keyframes progress {
+      0% { width: 0%; left: 0%; }
+      50% { width: 60%; left: 20%; }
+      100% { width: 0%; left: 100%; }
+    }
+    .boot-status {
+      margin-top: 0.8rem;
+      font-size: 0.7rem;
+      color: #3d8bff;
+      font-weight: 500;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">
+    <div class="flicker"></div>
+    <div class="crt-overlay"></div>
+    <div class="bios-window">
+      <div class="bios-header">
+        <span>RetroCore BIOS v2.0</span>
+        <span>2026</span>
+      </div>
+      <div class="bios-log" id="bios-log">
+        <span class="log-line">Initializing CPU... [OK]</span>
+        <span class="log-line" style="animation-delay: 0.2s">Memory Check... 65536KB [OK]</span>
+        <span class="log-line" style="animation-delay: 0.5s">V-Sync... Enable [OK]</span>
+        <span class="log-line" style="animation-delay: 0.8s">Loading Core Data... [WAIT]</span>
+      </div>
+      <div class="loader-bar">
+        <div class="loader-progress"></div>
+      </div>
+      <div class="boot-status" id="boot-text">Awaiting Game Signal...</div>
+    </div>
+  </div>
+  <div id="game"></div>
+  <script>
+    // Force preserveDrawingBuffer so screenshots capture actual frame content
+    (function () {
+      var origGetContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (type, attrs) {
+        if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+          attrs = Object.assign({}, attrs || {}, { preserveDrawingBuffer: true });
+        }
+        return origGetContext.call(this, type, attrs);
+      };
+    })();
+  </script>
+  <script>
+    (function () {
+      const statusEl = document.getElementById('status');
+      const bootText = document.getElementById('boot-text');
+      const biosLog = document.getElementById('bios-log');
+      const CDN = 'https://cdn.emulatorjs.org/stable/data/';
+      const trustedParentOrigin = window.location.protocol === 'file:' ? 'null' : window.location.origin;
+
+      function canTrustParent(origin) {
+        return origin === trustedParentOrigin;
+      }
+
+      function postToParent(message) {
+        if (!window.parent || window.parent === window) return;
+        window.parent.postMessage(message, trustedParentOrigin === 'null' ? '*' : trustedParentOrigin);
+      }
+
+      function fail(msg) {
+        statusEl.classList.remove('hidden');
+        bootText.textContent = 'BOOT ERROR: ' + msg.toUpperCase();
+        bootText.style.color = '#ff3d3d';
+        const line = document.createElement('span');
+        line.className = 'log-line';
+        line.style.color = '#ff3d3d';
+        line.textContent = '> FATAL ERROR: SYSTEM HALTED';
+        biosLog.appendChild(line);
+      }
+
+      function setEjsGlobals(core, gameUrl, biosUrl, customControls, cheats) {
+        window.EJS_player = '#game';
+        window.EJS_core = core;
+        window.EJS_gameUrl = gameUrl;
+        window.EJS_biosUrl = biosUrl || '';
+        window.EJS_pathtodata = CDN;
+        window.EJS_startOnLoaded = true;
+
+        if (cheats && cheats.length > 0) {
+          window.EJS_gamePatches = cheats.join('\n');
+        }
+
+        window.EJS_defaultControls = {
+          0: {
+            0: { value: '', value2: 'BUTTON_2' },
+            1: { value: '', value2: 'BUTTON_4' },
+            2: { value: '', value2: 'SELECT' },
+            3: { value: '', value2: 'START' },
+            4: { value: '', value2: 'DPAD_UP' },
+            5: { value: '', value2: 'DPAD_DOWN' },
+            6: { value: '', value2: 'DPAD_LEFT' },
+            7: { value: '', value2: 'DPAD_RIGHT' },
+            8: { value: '', value2: 'BUTTON_1' },
+            9: { value: '', value2: 'BUTTON_3' },
+            10: { value: '', value2: 'LEFT_TOP_SHOULDER' },
+            11: { value: '', value2: 'RIGHT_TOP_SHOULDER' },
+            12: { value: '', value2: 'LEFT_BOTTOM_SHOULDER' },
+            13: { value: '', value2: 'RIGHT_BOTTOM_SHOULDER' },
+            14: { value: '', value2: 'LEFT_STICK' },
+            15: { value: '', value2: 'RIGHT_STICK' },
+            16: { value: '', value2: 'LEFT_STICK_X:+1' },
+            17: { value: '', value2: 'LEFT_STICK_X:-1' },
+            18: { value: '', value2: 'LEFT_STICK_Y:+1' },
+            19: { value: '', value2: 'LEFT_STICK_Y:-1' },
+            20: { value: '', value2: 'RIGHT_STICK_X:+1' },
+            21: { value: '', value2: 'RIGHT_STICK_X:-1' },
+            22: { value: '', value2: 'RIGHT_STICK_Y:+1' },
+            23: { value: '', value2: 'RIGHT_STICK_Y:-1' },
+            24: { value: '' }, 25: { value: '' }, 26: { value: '' }, 27: { value: '' }, 28: { value: '' }, 29: { value: '' },
+          },
+          1: {}, 2: {}, 3: {},
+        };
+      }
+
+      function loadLoader() {
+        statusEl.classList.add('hidden');
+        const s = document.createElement('script');
+        s.src = CDN + 'loader.js';
+        s.async = true;
+        s.onerror = function () {
+          fail('Could not load emulator (CDN blocked or offline).');
+        };
+        document.body.appendChild(s);
+        setupFocusHandling();
+      }
+
+      // Ensure keyboard input reaches the emulator no matter what.
+      // Problem: when the iframe or canvas isn't focused, keydown events never
+      // reach EmulatorJS, so D-pad, A/B buttons, etc. do nothing.
+      // Fix: (a) focus the canvas as soon as it mounts, (b) refocus on any
+      // click inside the iframe, (c) catch keyboard events at the window level
+      // and forward them as needed.
+      function setupFocusHandling() {
+        // Make the body focusable as a fallback
+        document.body.setAttribute('tabindex', '-1');
+
+        function focusGame() {
+          const canvas = document.querySelector('#game canvas');
+          if (canvas) {
+            // Canvas must be focusable to receive keyboard events
+            if (!canvas.hasAttribute('tabindex')) {
+              canvas.setAttribute('tabindex', '0');
+            }
+            try { canvas.focus({ preventScroll: true }); } catch (e) { canvas.focus(); }
+          } else {
+            // Canvas not ready yet; focus window/body so keys aren't dropped
+            try { window.focus(); } catch (e) {}
+            try { document.body.focus(); } catch (e) {}
+          }
+        }
+
+        // Watch for the canvas to appear — EmulatorJS creates it after loading
+        const observer = new MutationObserver(function () {
+          const canvas = document.querySelector('#game canvas');
+          if (canvas) {
+            if (!canvas.hasAttribute('tabindex')) canvas.setAttribute('tabindex', '0');
+            focusGame();
+            // Stop observing once we have focus
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.getElementById('game'), { childList: true, subtree: true });
+
+        // Refocus on any click inside the iframe
+        document.addEventListener('click', focusGame, true);
+        document.addEventListener('touchstart', focusGame, true);
+
+        // Also try once after the loader has had time to mount the canvas
+        setTimeout(focusGame, 500);
+        setTimeout(focusGame, 2000);
+        setTimeout(focusGame, 5000);
+      }
+
+      window.addEventListener('message', function (e) {
+        if (e.source !== window.parent) return;
+        if (!canTrustParent(e.origin)) return;
+        const d = e.data;
+        if (!d || !d.type) return;
+
+        if (d.type === 'EJS_LAUNCH') {
+          const { core, rom, bios, cheats, controls } = d;
+          let romUrl = (rom instanceof ArrayBuffer || rom instanceof Uint8Array) ? URL.createObjectURL(new Blob([rom])) : rom;
+          let biosUrl = (bios && (bios instanceof ArrayBuffer || bios.byteLength > 0)) ? URL.createObjectURL(new Blob([bios])) : '';
+          
+          setEjsGlobals(core, romUrl, biosUrl, controls, cheats);
+          setTimeout(function() {
+            loadLoader();
+          }, 2500);
+        } else if (d.type === 'EXPORT_SAVES') {
+          try {
+            const request = window.indexedDB.open('/libretro');
+            request.onsuccess = (ev) => {
+              const idb = ev.target.result;
+              if (!idb.objectStoreNames.contains('FILE_DATA')) {
+                postToParent({ type: 'SAVES_EXPORT_RESULT', error: 'No save data found yet.' });
+                return;
+              }
+              const store = idb.transaction(['FILE_DATA'], 'readonly').objectStore('FILE_DATA');
+              const allFiles = [];
+              store.openCursor().onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                  let val = cursor.value;
+                  if (val && val.contents && val.contents instanceof Uint8Array) {
+                    val = Object.assign({}, val, { contents: Array.from(val.contents) });
+                  }
+                  allFiles.push({ key: cursor.key, value: val });
+                  cursor.continue();
+                } else {
+                  postToParent({ type: 'SAVES_EXPORT_RESULT', data: allFiles.length > 0 ? allFiles : null });
+                }
+              };
+            };
+          } catch(ex) { postToParent({ type: 'SAVES_EXPORT_RESULT', error: ex.message }); }
+
+        } else if (d.type === 'IMPORT_SAVES') {
+          try {
+            const request = window.indexedDB.open('/libretro');
+            request.onsuccess = (ev) => {
+              const idb = ev.target.result;
+              const tx = idb.transaction(['FILE_DATA'], 'readwrite');
+              const store = tx.objectStore('FILE_DATA');
+              d.data.forEach(item => {
+                if (item.value && item.value.contents && Array.isArray(item.value.contents)) {
+                  item.value.contents = new Uint8Array(item.value.contents);
+                }
+                store.put(item.value, item.key);
+              });
+              tx.oncomplete = () => postToParent({ type: 'SAVES_IMPORT_RESULT', success: true });
+            };
+          } catch(ex) { postToParent({ type: 'SAVES_IMPORT_RESULT', error: ex.message }); }
+
+        } else if (d.type === 'CAPTURE_SCREENSHOT') {
+          const canvas = document.querySelector('#game canvas');
+          if (canvas) {
+            requestAnimationFrame(() => {
+              const tmp = document.createElement('canvas');
+              tmp.width = canvas.width; tmp.height = canvas.height;
+              tmp.getContext('2d').drawImage(canvas, 0, 0);
+              postToParent({ type: 'SCREENSHOT_RESULT', data: tmp.toDataURL('image/jpeg', 0.85) });
+            });
+          }
+        }
+      });
+
+      postToParent({ type: 'EJS_PLAYER_READY' });
+    })();
+  </script>
+</body>
+</html>
