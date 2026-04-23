@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RetroUniverse Player</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    body { display: flex; }
+
+    /* Game mount — fills the whole viewport */
+    #game {
+      flex: 1;
+      width: 100%;
+      height: 100vh;
+      min-height: 100vh;
+      position: relative;
+      background: #000;
+    }
+    #game canvas {
+      outline: none !important;
+      display: block;
+    }
+
+    /* Loading screen overlay */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #0a0818 0%, #000 100%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      transition: opacity 0.4s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+
+    .loader-box {
+      width: 100%;
+      max-width: 460px;
+      padding: 1.5rem 1.75rem;
+      border: 1px solid #22325a;
+      background: rgba(5, 10, 25, 0.9);
+      box-shadow: 0 0 40px rgba(80, 140, 255, 0.15);
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    .loader-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #6aaaff;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      padding-bottom: 0.55rem;
+      margin-bottom: 1.1rem;
+      border-bottom: 1px solid #22325a;
+    }
+    .loader-log {
+      font-size: 0.85rem;
+      line-height: 1.65;
+      color: #9ab8d8;
+      min-height: 7.5rem;
+      margin-bottom: 1rem;
+    }
+    .loader-log span {
+      display: block;
+      opacity: 0;
+      animation: logIn 0.25s forwards;
+    }
+    @keyframes logIn { to { opacity: 1; } }
+    .ok { color: #54e370; float: right; }
+    .wait { color: #ffb93a; float: right; animation: blink 0.8s infinite; }
+    @keyframes blink { 50% { opacity: 0.3; } }
+
+    .loader-bar {
+      height: 3px;
+      background: #0a1530;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 0.6rem;
+    }
+    .loader-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 30%;
+      background: linear-gradient(90deg, transparent, #4a9bff, transparent);
+      animation: sweep 1.6s linear infinite;
+    }
+    @keyframes sweep {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(400%); }
+    }
+    .loader-foot {
+      text-align: right;
+      font-size: 0.7rem;
+      color: #4a9bff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .loader-error {
+      color: #ff5c5c !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loader">
+    <div class="loader-box">
+      <div class="loader-head">
+        <span>RetroCore BIOS v2.1</span>
+        <span id="year-stamp"></span>
+      </div>
+      <div class="loader-log" id="log">
+        <span>Initializing CPU... <span class="ok">[ OK ]</span></span>
+        <span style="animation-delay:.2s">Memory check 65536 KB... <span class="ok">[ OK ]</span></span>
+        <span style="animation-delay:.5s">V-Sync enabled at 60 Hz... <span class="ok">[ OK ]</span></span>
+        <span style="animation-delay:.8s">Loading core data... <span class="wait">[WAIT]</span></span>
+      </div>
+      <div class="loader-bar"></div>
+      <div class="loader-foot" id="status">Awaiting game signal...</div>
+    </div>
+  </div>
+
+  <!-- Game mount -->
+  <div id="game"></div>
+
+  <script>
+    // Force WebGL preserveDrawingBuffer so screenshot capture works reliably
+    (function patchWebGL() {
+      const orig = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (type, attrs) {
+        if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') {
+          attrs = Object.assign({}, attrs || {}, { preserveDrawingBuffer: true });
+        }
+        return orig.call(this, type, attrs);
+      };
+    })();
+  </script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ──────────────────────────────────────────────
+         CONFIG
+         ────────────────────────────────────────────── */
+      const CDN = 'https://cdn.emulatorjs.org/stable/data/';
+      const TRUSTED_ORIGIN = location.protocol === 'file:' ? 'null' : location.origin;
+
+      /* ──────────────────────────────────────────────
+         DEFAULT CONTROLS
+         EmulatorJS's settings UI reads from
+         EJS_Settings.defaultControllers using NUMERIC keycodes.
+         We also set EJS_defaultControls with string names as
+         a belt-and-suspenders fallback for older loaders.
+         ────────────────────────────────────────────── */
+      // Keyboard: Z=90, X=88, A=65, S=83, Enter=13, Shift=16,
+      // Arrows: up=38, down=40, left=37, right=39,
+      // Q=81, E=69, Tab=9, R=82
+      // Sticks: F=70, G=71, H=72, T=84, J=74, K=75, L=76, I=73
+      //
+      // Input indices (outer key):
+      //   0=B, 1=Y, 2=Select, 3=Start,
+      //   4/5/6/7=Dpad up/down/left/right,
+      //   8=A, 9=X, 10=L1, 11=R1, 12=L2, 13=R2,
+      //   14/15=L3/R3, 16-23=stick axes
+      //
+      // Gamepad indices (value2):
+      //   0=A(Xbox)/Cross, 1=B/Circle, 2=X/Square, 3=Y/Triangle
+      //   4=L1, 5=R1, 6=L2, 7=R2, 8=Select, 9=Start,
+      //   10=L3, 11=R3, 12/13/14/15=Dpad U/D/L/R
+      const DEFAULT_NUMERIC = {
+        '0': {
+          '0':  { 'value': '88', 'value2': '1'  },  // X → B
+          '1':  { 'value': '83', 'value2': '3'  },  // S → Y
+          '2':  { 'value': '16', 'value2': '8'  },  // Shift → Select
+          '3':  { 'value': '13', 'value2': '9'  },  // Enter → Start
+          '4':  { 'value': '38', 'value2': '12' },  // ↑ → Dpad Up
+          '5':  { 'value': '40', 'value2': '13' },  // ↓ → Dpad Down
+          '6':  { 'value': '37', 'value2': '14' },  // ← → Dpad Left
+          '7':  { 'value': '39', 'value2': '15' },  // → → Dpad Right
+          '8':  { 'value': '90', 'value2': '0'  },  // Z → A
+          '9':  { 'value': '65', 'value2': '2'  },  // A → X
+          '10': { 'value': '81', 'value2': '4'  },  // Q → L1
+          '11': { 'value': '69', 'value2': '5'  },  // E → R1
+          '12': { 'value': '9',  'value2': '6'  },  // Tab → L2
+          '13': { 'value': '82', 'value2': '7'  },  // R → R2
+          '14': {}, '15': {},
+          '16': { 'value': '72' }, '17': { 'value': '70' },
+          '18': { 'value': '71' }, '19': { 'value': '84' },
+          '20': { 'value': '76' }, '21': { 'value': '74' },
+          '22': { 'value': '75' }, '23': { 'value': '73' },
+          '24': {}, '25': {}, '26': {}
+        },
+        '1': {}, '2': {}, '3': {}
+      };
+      const DEFAULT_STRING = {
+        0: {
+          0:  { value: 'x',           value2: 'BUTTON_2' },
+          1:  { value: 's',           value2: 'BUTTON_4' },
+          2:  { value: 'shift',       value2: 'SELECT' },
+          3:  { value: 'enter',       value2: 'START' },
+          4:  { value: 'up arrow',    value2: 'DPAD_UP' },
+          5:  { value: 'down arrow',  value2: 'DPAD_DOWN' },
+          6:  { value: 'left arrow',  value2: 'DPAD_LEFT' },
+          7:  { value: 'right arrow', value2: 'DPAD_RIGHT' },
+          8:  { value: 'z',           value2: 'BUTTON_1' },
+          9:  { value: 'a',           value2: 'BUTTON_3' },
+          10: { value: 'q',           value2: 'LEFT_TOP_SHOULDER' },
+          11: { value: 'e',           value2: 'RIGHT_TOP_SHOULDER' },
+          12: { value: 'tab',         value2: 'LEFT_BOTTOM_SHOULDER' },
+          13: { value: 'r',           value2: 'RIGHT_BOTTOM_SHOULDER' },
+          14: { value: '', value2: 'LEFT_STICK' },
+          15: { value: '', value2: 'RIGHT_STICK' },
+          16: { value: 'h', value2: 'LEFT_STICK_X:+1' },
+          17: { value: 'f', value2: 'LEFT_STICK_X:-1' },
+          18: { value: 'g', value2: 'LEFT_STICK_Y:+1' },
+          19: { value: 't', value2: 'LEFT_STICK_Y:-1' },
+          20: { value: 'l', value2: 'RIGHT_STICK_X:+1' },
+          21: { value: 'j', value2: 'RIGHT_STICK_X:-1' },
+          22: { value: 'k', value2: 'RIGHT_STICK_Y:+1' },
+          23: { value: 'i', value2: 'RIGHT_STICK_Y:-1' },
+          24: { value: '' }, 25: { value: '' }, 26: { value: '' },
+          27: { value: '' }, 28: { value: '' }, 29: { value: '' }
+        },
+        1: {}, 2: {}, 3: {}
+      };
+
+      /* ──────────────────────────────────────────────
+         DOM refs
+         ────────────────────────────────────────────── */
+      const loader = document.getElementById('loader');
+      const statusEl = document.getElementById('status');
+      const logEl = document.getElementById('log');
+      document.getElementById('year-stamp').textContent = new Date().getFullYear();
+
+      /* ──────────────────────────────────────────────
+         Parent messaging (safe postMessage wrapper)
+         ────────────────────────────────────────────── */
+      function postToParent(msg) {
+        if (!window.parent || window.parent === window) return;
+        window.parent.postMessage(msg, TRUSTED_ORIGIN === 'null' ? '*' : TRUSTED_ORIGIN);
+      }
+      function fromTrustedParent(e) {
+        return e.source === window.parent &&
+               (TRUSTED_ORIGIN === 'null' || e.origin === TRUSTED_ORIGIN);
+      }
+
+      /* ──────────────────────────────────────────────
+         Error reporting
+         ────────────────────────────────────────────── */
+      function showError(message) {
+        loader.classList.remove('hidden');
+        statusEl.textContent = 'BOOT ERROR: ' + message.toUpperCase();
+        statusEl.classList.add('loader-error');
+        const line = document.createElement('span');
+        line.style.color = '#ff5c5c';
+        line.textContent = '> FATAL ERROR: SYSTEM HALTED';
+        logEl.appendChild(line);
+      }
+
+      /* ──────────────────────────────────────────────
+         EmulatorJS launch
+         ────────────────────────────────────────────── */
+      function configureEJS(core, romUrl, biosUrl, cheats) {
+        window.EJS_player = '#game';
+        window.EJS_core = core;
+        window.EJS_gameUrl = romUrl;
+        window.EJS_biosUrl = biosUrl || '';
+        window.EJS_pathtodata = CDN;
+        window.EJS_startOnLoaded = true;
+
+        if (cheats && cheats.length) {
+          window.EJS_gamePatches = cheats.join('\n');
+        }
+
+        // Deep clones so runtime remapping can't pollute defaults across games
+        window.EJS_Settings = Object.assign({}, window.EJS_Settings || {}, {
+          defaultControllers: JSON.parse(JSON.stringify(DEFAULT_NUMERIC))
+        });
+        window.EJS_defaultControls = JSON.parse(JSON.stringify(DEFAULT_STRING));
+
+        // PRE-SEED localStorage so FIRST-time users see populated dropdowns
+        // in the settings UI. EmulatorJS persists control maps by game or by
+        // system under a few different key names depending on version, so we
+        // seed every plausible key — but only if nothing is there yet.
+        // (If user already remapped, we never overwrite.)
+        preseedControlsInStorage(core);
+      }
+
+      function preseedControlsInStorage(core) {
+        try {
+          const numeric = JSON.parse(JSON.stringify(DEFAULT_NUMERIC));
+          const candidateKeys = [
+            'ejs-settings',
+            'EJS_SETTINGS',
+            'ejs_controls',
+            'controls-' + core,
+            'ejs_controls_' + core,
+            'ejs-controls-' + core
+          ];
+          for (const key of candidateKeys) {
+            if (localStorage.getItem(key) == null) {
+              // Seed a tiny marker object that covers the formats the UI
+              // most likely reads from: direct controls + wrapped in "controls"
+              const payload = { controls: numeric, defaultControllers: numeric };
+              try {
+                localStorage.setItem(key, JSON.stringify(payload));
+              } catch (_) { /* quota full or private browsing — not fatal */ }
+            }
+          }
+        } catch (err) {
+          console.warn('[RetroUniverse] Could not pre-seed controls:', err);
+        }
+      }
+
+      function startEmulator() {
+        loader.classList.add('hidden');
+
+        const s = document.createElement('script');
+        s.src = CDN + 'loader.js';
+        s.async = true;
+        s.onerror = () => showError('Could not load emulator (CDN blocked or offline)');
+        document.body.appendChild(s);
+
+        setupFocus();
+      }
+
+      /* ──────────────────────────────────────────────
+         Keyboard focus — the canvas must be focused or
+         keypresses never reach EmulatorJS. We:
+         1) Make body focusable as a fallback
+         2) Watch for canvas insertion and focus it
+         3) Refocus on every click/touch
+         4) Retry-focus a few times to catch late mounts
+         ────────────────────────────────────────────── */
+      function setupFocus() {
+        document.body.setAttribute('tabindex', '-1');
+
+        function focusGame() {
+          const c = document.querySelector('#game canvas');
+          if (c) {
+            if (!c.hasAttribute('tabindex')) c.setAttribute('tabindex', '0');
+            try { c.focus({ preventScroll: true }); }
+            catch (_) { try { c.focus(); } catch (__) {} }
+          } else {
+            try { window.focus(); } catch (_) {}
+            try { document.body.focus(); } catch (_) {}
+          }
+        }
+
+        const mo = new MutationObserver(() => {
+          const c = document.querySelector('#game canvas');
+          if (c) {
+            if (!c.hasAttribute('tabindex')) c.setAttribute('tabindex', '0');
+            focusGame();
+            mo.disconnect();
+          }
+        });
+        mo.observe(document.getElementById('game'), { childList: true, subtree: true });
+
+        document.addEventListener('click', focusGame, true);
+        document.addEventListener('touchstart', focusGame, true);
+
+        [300, 1200, 3000, 6000].forEach(ms => setTimeout(focusGame, ms));
+      }
+
+      /* ──────────────────────────────────────────────
+         Screenshot capture (parent requests, we respond)
+         ────────────────────────────────────────────── */
+      function captureScreenshot() {
+        const canvas = document.querySelector('#game canvas');
+        if (!canvas) {
+          postToParent({ type: 'SCREENSHOT_RESULT', error: 'No canvas yet' });
+          return;
+        }
+        requestAnimationFrame(() => {
+          try {
+            const tmp = document.createElement('canvas');
+            tmp.width = canvas.width;
+            tmp.height = canvas.height;
+            tmp.getContext('2d').drawImage(canvas, 0, 0);
+            postToParent({
+              type: 'SCREENSHOT_RESULT',
+              data: tmp.toDataURL('image/jpeg', 0.85)
+            });
+          } catch (err) {
+            postToParent({ type: 'SCREENSHOT_RESULT', error: err.message });
+          }
+        });
+      }
+
+      /* ──────────────────────────────────────────────
+         Message handler — parent → iframe
+         ────────────────────────────────────────────── */
+      window.addEventListener('message', function (e) {
+        if (!fromTrustedParent(e)) return;
+        const d = e.data;
+        if (!d || !d.type) return;
+
+        switch (d.type) {
+          case 'EJS_LAUNCH': {
+            const { core, rom, bios, cheats } = d;
+            const romUrl = (rom instanceof ArrayBuffer || rom instanceof Uint8Array)
+              ? URL.createObjectURL(new Blob([rom]))
+              : rom;
+            const biosUrl = (bios && (bios instanceof ArrayBuffer || (bios.byteLength > 0)))
+              ? URL.createObjectURL(new Blob([bios]))
+              : '';
+            configureEJS(core, romUrl, biosUrl, cheats);
+            // Small delay lets the loading screen render at least one frame
+            setTimeout(startEmulator, 1800);
+            break;
+          }
+          case 'CAPTURE_SCREENSHOT':
+            captureScreenshot();
+            break;
+        }
+      });
+
+      // Tell the parent we're ready to receive an EJS_LAUNCH
+      postToParent({ type: 'EJS_PLAYER_READY' });
+    })();
+  </script>
+</body>
+</html>
